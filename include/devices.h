@@ -1,13 +1,16 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
 
 namespace PicoDriver {
     namespace Devices {
-        struct PWM; 
-        struct ADC; 
-        struct DRV8825;
-        struct HX711;
+        enum struct DeviceId : uint8_t { PWM, ADC, DRV8825, HX711 };
+
+        struct PWM final : public std::integral_constant<DeviceId, DeviceId::PWM> {};
+        struct ADC final : public std::integral_constant<DeviceId, DeviceId::PWM> {};
+        struct DRV8825 final : public std::integral_constant<DeviceId, DeviceId::PWM> {};
+        struct HX711 final : public std::integral_constant<DeviceId, DeviceId::PWM> {};
     };
 
     template<typename Device>

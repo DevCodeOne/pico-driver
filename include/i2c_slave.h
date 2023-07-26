@@ -9,6 +9,9 @@
 #include <pico/stdlib.h>
 #include <type_traits>
 
+#include "device_memory.h"
+#include "device_info.h"
+
 namespace PicoDriver {
 
     template<size_t Number> 
@@ -30,7 +33,7 @@ namespace PicoDriver {
         static constexpr auto value = Pin::value;
     };
 
-    template<typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename MemoryRepresentation>
+    template<typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename ... Devices>
     class I2CSlave {
         public:
 
@@ -76,6 +79,6 @@ namespace PicoDriver {
             }
 
             static inline std::optional<uint8_t> memAddress;
-            static inline MemoryRepresentation data;
+            static inline Memory<DeviceInfo<Devices ...>, Devices ...> data;
     };
 }
