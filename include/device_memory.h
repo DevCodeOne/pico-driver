@@ -6,23 +6,12 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "type_utils.h"
+
 namespace PicoDriver {
 
     template<typename Device>
     struct MemoryRepresentation;
-
-    template<size_t Index, typename Head, typename ... Rest>
-    struct TypeAt {
-        using type = typename TypeAt<Index - 1, Rest ...>::type;
-    };
-
-    template<typename Head, typename ... Rest>
-    struct TypeAt<0, Head, Rest ...> {
-        using type = Head;
-    };
-
-    template<size_t Index, typename ... TypeList>
-    using TypeAt_t = typename TypeAt<Index, TypeList ...>::type;
 
     // TODO: check max size < 255 (size of uint, or change behaviour)
     template<typename ... Devices>
