@@ -35,14 +35,14 @@ namespace PicoDriver {
 
         template<size_t Index>
         constexpr auto getEntry() {
-            using CurrentType = MemoryRepresentation<typename TypeAt_t<Index, Devices ...>::Tag>;
+            using CurrentType = MemoryRepresentation<typename TypeUtils::TypeAt_t<Index, Devices ...>::Tag>;
             return reinterpret_cast<std::add_pointer_t<std::add_volatile_t<CurrentType>>>(byteRepresentation + offset(Index));
         }
 
 
         template<size_t Index>
         constexpr auto getEntry() const {
-            using CurrentType = MemoryRepresentation<typename TypeAt_t<Index, Devices ...>::Tag>;
+            using CurrentType = MemoryRepresentation<typename TypeUtils::TypeAt_t<Index, Devices ...>::Tag>;
             return reinterpret_cast<std::add_pointer_t<std::add_volatile_t<CurrentType>>>(byteRepresentation + offset(Index));
         }
 

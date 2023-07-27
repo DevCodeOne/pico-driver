@@ -12,6 +12,7 @@
 
 #include "device_memory.h"
 #include "device_info.h"
+#include "devices.h"
 
 namespace PicoDriver {
 
@@ -34,31 +35,29 @@ namespace PicoDriver {
         static constexpr auto value = Pin::value;
     };
 
-    template<size_t Index, size_t Len, typename ... Args>
-    struct ConstexprFor {
-        template<typename Callable>
-        static auto call(Callable callable, std::tuple<Args ...> &args) {
-            using ReturnType = decltype(ConstexprFor<Index - 1, Len, Args ...>::call(callable, args));
-            using IndexType = std::integral_constant<uint16_t, Index>;
-            if constexpr (std::is_same_v<ReturnType, void>) {
-                return callable(IndexType{}, std::get<Index>(args)) & ConstexprFor<Index - 1, Len, Args ...>::call(callable, args);
-            } else {
-                return callable(IndexType{}, std::get<Index>(args));
-            }
-        }
-    };
-
-    template<size_t Len, typename ... Args>
-    struct ConstexprFor<0, Len, Args ...> {
-        template<typename Callable>
-        static auto call(Callable callable, std::tuple<Args ...> &args) {
-            using IndexType = std::integral_constant<uint16_t, 0>;
-            return callable(IndexType{}, std::get<0>(args));
-        }
-    };
-
-    template<typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename ... Devices>
+    template<auto *I2CDevice, typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename DeviceListType>
     class I2CSlave {
+        private:
+            template<typename D>
+            struct ValuesType;
+
+            template<typename ... Devices>
+            struct ValuesType<DeviceList<Devices ...>> {
+                static inline std::optional<uint8_t> memAddress;
+                static inline Memory<DeviceInfo<Devices ...>, Devices ...> data;
+                static inline std::tuple<Devices ...> runtimeDevices;
+
+                using LoopDevices = TypeUtils::ConstexprFor<0, sizeof...(Devices), Devices ...>;
+            };
+
+            using Values = ValuesType<DeviceListType>;
+
+            static inline auto &memAddress  = Values::memAddress;
+            static inline auto &data  = Values::data;
+            static inline auto &runtimeDevices  = Values::runtimeDevices;
+
+            using LoopDevices = typename Values::LoopDevices;
+
         public:
 
             static bool install() { 
@@ -73,17 +72,17 @@ namespace PicoDriver {
                 gpio_set_function(SCLPin::value, GPIO_FUNC_I2C);
                 gpio_pull_up(SCLPin::value);
 
-                i2c_init(i2c0, Baudrate::value);
+                i2c_init(I2CDevice, Baudrate::value);
 
-                i2c_slave_init(i2c0, I2CAddress::value, &I2CSlave::handler);
+                i2c_slave_init(I2CDevice, I2CAddress::value, &I2CSlave::handler);
                 return true; 
             }
 
             [[noreturn]] static void run() { 
                 while(1) {
-                    ConstexprFor<sizeof...(Devices) - 1, sizeof...(Devices), Devices ...>::call([](auto index, auto &instance) {
+                    LoopDevices::call([](auto index, auto &instance) {
                         constexpr auto Index = decltype(index)::value + 1;
-                        instance.doWork(data.template getEntry<Index>());
+                        return instance.doWork(data.template getEntry<Index>());
                     }, runtimeDevices);
                 }
             }
@@ -111,13 +110,11 @@ namespace PicoDriver {
             }
 
             static void installRuntimeDevices() {
-                ConstexprFor<sizeof...(Devices) - 1, sizeof...(Devices), Devices ...>::call([](uint16_t index, auto &instance) {
-                    instance.install();
+                LoopDevices::call([](uint16_t index, auto &instance) {
+                    return instance.install();
                 }, runtimeDevices);
             }
 
-            static inline std::optional<uint8_t> memAddress;
-            static inline Memory<DeviceInfo<Devices ...>, Devices ...> data;
-            static inline std::tuple<Devices ...> runtimeDevices;
-    };
+                };
+
 }

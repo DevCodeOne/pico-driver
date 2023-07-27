@@ -15,8 +15,13 @@
 using namespace PicoDriver;
 
 // TODO: add concepts for all the different device types
-using i2cDevice = I2CSlave<SDA<Pin<15>>, SCL<Pin<14>>, Address<32>, Baudrate<100000>, 
-                            PWM<Pin<13>, std::integral_constant<uint16_t, 10000>>>;
+static auto constexpr I2CDevice0 = i2c0;
+using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<15>>, SCL<Pin<14>>, Address<32>, Baudrate<100000>, 
+                            DeviceList<
+                                PWM<Pin<13>, Hz<100u>>,
+                                ADC<Pin<16>>
+                            >
+                        >;
 
 int main() {
 

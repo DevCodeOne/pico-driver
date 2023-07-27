@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <cstdint>
+#include <concepts>
 
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
@@ -10,6 +11,10 @@
 #include "devices.h"
 
 namespace PicoDriver {
+
+    template<auto Value>
+    requires (std::is_unsigned_v<decltype(Value)>)
+    using Hz = std::integral_constant<decltype(Value), Value>;
 
     namespace DeviceTags {
         struct PWM final : public std::integral_constant<DeviceId, DeviceId::PWM> {};
@@ -23,7 +28,9 @@ namespace PicoDriver {
     } __attribute__((packed));
 
 
+    // TODO: add Freq type which is configurable at runtime with different MemoryRepresentation
     template<typename Pin, typename Freq>
+    requires (Freq::value > 0)
     class PWM {
         public:
         using Tag = DeviceTags::PWM;

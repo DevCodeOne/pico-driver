@@ -12,4 +12,7 @@ namespace PicoDriver {
 
     };
 
+    template<typename ... Devices>
+    using DeviceList = std::tuple<Devices ...>;
+
 }
