@@ -10,6 +10,9 @@
 #include "devices/hx711.h"
 #include "devices/drv8825.h"
 
+#include "build_config.h"
+#include "runtime_access.h"
+
 using namespace PicoDriver;
 
 // TODO: add concepts for all the different device types
@@ -22,7 +25,6 @@ using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<15>>, SCL<Pin<14>>, Address<32>, 
                                 ADC<Pin<16>>
                             >
                         >;
-
 int main() {
     stdio_init_all();
 

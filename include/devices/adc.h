@@ -4,29 +4,25 @@
 
 namespace PicoDriver {
 
-    namespace DeviceTags {
-        struct ADC final : public std::integral_constant<DeviceId, DeviceId::ADC> {};
-    }
+    template<typename Pin>
+    class ADC {
+        public:
+        bool install() { 
+            return true; 
+        }
 
-    template<>
-    struct MemoryRepresentation<DeviceTags::ADC> {
+        bool doWork(volatile MemoryRepresentation<ADC> *memory) { 
+            return true; 
+        }
+    };
+
+    template<typename Pin>
+    struct MemoryRepresentation<ADC<Pin>> {
         ~MemoryRepresentation() = delete;
 
         uint16_t adcValue;
     } __attribute__((packed));
 
-    template<typename Pin>
-    class ADC {
-        public:
-        using Tag = DeviceTags::ADC;
 
-        bool install() { 
-            return true; 
-        }
-
-        bool doWork(volatile MemoryRepresentation<Tag> *memory) { 
-            return true; 
-        }
-    };
 
 }

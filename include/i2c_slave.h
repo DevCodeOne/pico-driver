@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <algorithm>
+#include <numeric>
 #include <optional>
 #include <type_traits>
 #include <tuple>
@@ -35,16 +37,28 @@ namespace PicoDriver {
         static constexpr auto value = Pin::value;
     };
 
-    template<auto *I2CDevice, typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename DeviceListType>
+    template<typename T>
+    constexpr bool IsUniqueSet(const T &iterateable) {
+        return std::accumulate(iterateable.cbegin(), iterateable.cend(), size_t{0}, [&iterateable](const auto &sum, const auto &currentElement) {
+            return sum + std::count(iterateable.cbegin(), iterateable.cend(), currentElement);
+        }) == iterateable.size();
+    }
+
+    // TODO: Add DeviceInfo in front
+    template<auto *I2CDevice, typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename DeviceListTypeWithoutInfo>
     class I2CSlave {
         private:
+            using DeviceListType = typename DeviceListTypeWithoutInfo::AppendDevice<DeviceInfo<DeviceListTypeWithoutInfo>>;
+
             template<typename D>
             struct ValuesType;
 
             template<typename ... Devices>
+            requires (TypeUtils::IsTypeSet<Devices ...>)
             struct ValuesType<DeviceList<Devices ...>> {
+
                 static inline std::optional<uint8_t> memAddress;
-                static inline Memory<DeviceInfo<Devices ...>, Devices ...> data;
+                static inline Memory<DeviceInfo<DeviceListTypeWithoutInfo>, Devices ...> data;
                 static inline std::tuple<Devices ...> runtimeDevices;
 
                 using LoopDevices = TypeUtils::ConstexprFor<0, sizeof...(Devices), Devices ...>;
@@ -75,6 +89,8 @@ namespace PicoDriver {
                 i2c_init(I2CDevice, Baudrate::value);
 
                 i2c_slave_init(I2CDevice, I2CAddress::value, &I2CSlave::handler);
+
+                installRuntimeDevices();
                 return true; 
             }
 
@@ -115,6 +131,6 @@ namespace PicoDriver {
                 }, runtimeDevices);
             }
 
-                };
+        };
 
 }

@@ -6,13 +6,10 @@
 #include "device_memory.h"
 
 namespace PicoDriver {
-    namespace DeviceTags {
-        // TODO: fix this
-        enum struct DeviceId : uint8_t { PWM, ADC, DRV8825, HX711 };
-
-    };
-
     template<typename ... Devices>
-    using DeviceList = std::tuple<Devices ...>;
+    struct DeviceList final : public std::tuple<Devices ...> {
+        template<typename Device>
+        using AppendDevice = DeviceList<Device, Devices ...>;
+    };
 
 }

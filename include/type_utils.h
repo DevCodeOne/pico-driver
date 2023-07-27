@@ -5,18 +5,52 @@
 namespace PicoDriver {
     namespace TypeUtils {
 
-        template<size_t Index, typename Head, typename ... Rest>
-        struct TypeAt {
-            using type = typename TypeAt<Index - 1, Rest ...>::type;
-        };
+        namespace Detail {
+            template<size_t ... Coordinates> 
+            struct Coordinate {
+                std::array<size_t, sizeof...(Coordinates)> values { Coordinates ...};
+            };
 
-        template<typename Head, typename ... Rest>
-        struct TypeAt<0, Head, Rest ...> {
-            using type = Head;
-        };
+            template<typename CoordinateType, typename ... Arguments>
+            struct CountTypes;
 
-        template<size_t Index, typename ... TypeList>
-        using TypeAt_t = typename TypeAt<Index, TypeList ...>::type;
+            template<size_t Index, size_t SecondaryIndex, typename ... Arguments>
+            struct CountTypes<Coordinate<Index, SecondaryIndex>, Arguments ...> {
+                using PrimaryType = std::tuple_element_t<Index, std::tuple<Arguments ...>>;
+                using SecondaryType = std::tuple_element_t<SecondaryIndex, std::tuple<Arguments ...>>;
+
+                static constexpr size_t FoundType = std::is_same_v<PrimaryType, SecondaryType> 
+                                                    + CountTypes<Coordinate<Index, SecondaryIndex - 1>, Arguments ...>::FoundType;
+            };
+
+            template<size_t PrimaryIndex, typename ... Arguments>
+            struct CountTypes<Coordinate<PrimaryIndex, 0>, Arguments ...> {
+                using PrimaryType = std::tuple_element_t<PrimaryIndex, std::tuple<Arguments ...>>;
+                using SecondaryType = std::tuple_element_t<0, std::tuple<Arguments ...>>;
+                static constexpr size_t FoundType = std::is_same_v<PrimaryType, SecondaryType> 
+                                                    + CountTypes<Coordinate<PrimaryIndex - 1, sizeof...(Arguments) - 1>, Arguments ...>::FoundType;
+            };
+
+            template<size_t SecondaryIndex, typename ... Arguments>
+            struct CountTypes<Coordinate<0, SecondaryIndex>, Arguments ...> {
+                using PrimaryType = std::tuple_element_t<0, std::tuple<Arguments ...>>;
+                using SecondaryType = std::tuple_element_t<SecondaryIndex, std::tuple<Arguments ...>>;
+                static constexpr size_t FoundType = std::is_same_v<PrimaryType, SecondaryType> 
+                                                    + CountTypes<Coordinate<0, SecondaryIndex - 1>, Arguments ...>::FoundType;
+            };
+
+            template<typename ... Arguments>
+            struct CountTypes<Coordinate<0, 0>, Arguments ...> {
+                static constexpr size_t FoundType = 1;
+            };
+
+        }
+
+        template<typename ... Arguments>
+        static inline constexpr bool CountTypes = Detail::CountTypes<Detail::Coordinate<sizeof...(Arguments) - 1, sizeof...(Arguments) - 1>, Arguments ...>::FoundType == sizeof...(Arguments);
+
+        template<typename ... Arguments>
+        static inline constexpr bool IsTypeSet = ::PicoDriver::TypeUtils::CountTypes<Arguments ...>;
 
         template<size_t Index, size_t Len, typename ... Args>
         struct ConstexprFor {

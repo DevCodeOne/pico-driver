@@ -17,7 +17,7 @@ namespace PicoDriver {
     requires (sizeof...(Devices) < 255)
     struct Memory {
 
-        static constexpr std::array<uint16_t, sizeof...(Devices)> Sizes{ sizeof(MemoryRepresentation<typename Devices::Tag>) ... };
+        static constexpr std::array<uint16_t, sizeof...(Devices)> Sizes{ sizeof(MemoryRepresentation<Devices>) ... };
 
         volatile uint8_t byteRepresentation[std::accumulate(Sizes.cbegin(), Sizes.cend(), size_t{0})];
 
@@ -35,14 +35,14 @@ namespace PicoDriver {
 
         template<size_t Index>
         constexpr auto getEntry() {
-            using CurrentType = MemoryRepresentation<typename TypeUtils::TypeAt_t<Index, Devices ...>::Tag>;
+            using CurrentType = MemoryRepresentation<typename std::tuple_element_t<Index, std::tuple<Devices ...>>>;
             return reinterpret_cast<std::add_pointer_t<std::add_volatile_t<CurrentType>>>(byteRepresentation + offset(Index));
         }
 
 
         template<size_t Index>
         constexpr auto getEntry() const {
-            using CurrentType = MemoryRepresentation<typename TypeUtils::TypeAt_t<Index, Devices ...>::Tag>;
+            using CurrentType = MemoryRepresentation<typename std::tuple_element_t<Index, std::tuple<Devices ...>>>;
             return reinterpret_cast<std::add_pointer_t<std::add_volatile_t<CurrentType>>>(byteRepresentation + offset(Index));
         }
 
