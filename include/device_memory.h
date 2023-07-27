@@ -13,8 +13,8 @@ namespace PicoDriver {
     template<typename Device>
     struct MemoryRepresentation;
 
-    // TODO: check max size < 255 (size of uint, or change behaviour)
     template<typename ... Devices>
+    requires (sizeof...(Devices) < 255)
     struct Memory {
 
         static constexpr std::array<uint16_t, sizeof...(Devices)> Sizes{ sizeof(MemoryRepresentation<typename Devices::Tag>) ... };

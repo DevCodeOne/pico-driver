@@ -8,3 +8,5 @@ Memorylayout for the devices is generated at compile time.
 - Add concepts for all the different types
 - Implement devices
 - Add I2CSettings type
+- Add possible input adapter, to support e.g. can bus in the future
+- Add i2c master, to that it can be used as a hub
