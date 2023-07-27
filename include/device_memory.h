@@ -6,9 +6,10 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "devices.h"
-
 namespace PicoDriver {
+
+    template<typename Device>
+    struct MemoryRepresentation;
 
     template<size_t Index, typename Head, typename ... Rest>
     struct TypeAt {
@@ -27,9 +28,9 @@ namespace PicoDriver {
     template<typename ... Devices>
     struct Memory {
 
-        static constexpr std::array<uint16_t, sizeof...(Devices)> Sizes{ sizeof(MemoryRepresentation<Devices>) ... };
+        static constexpr std::array<uint16_t, sizeof...(Devices)> Sizes{ sizeof(MemoryRepresentation<typename Devices::Tag>) ... };
 
-        std::array<uint8_t, std::accumulate(Sizes.cbegin(), Sizes.cend(), size_t{0})> byteRepresentation;
+        volatile uint8_t byteRepresentation[std::accumulate(Sizes.cbegin(), Sizes.cend(), size_t{0})];
 
         static uint16_t constexpr offset(uint16_t index) {
             return std::accumulate(Sizes.cbegin(), Sizes.cbegin() + index, static_cast<uint16_t>(0));
@@ -45,15 +46,15 @@ namespace PicoDriver {
 
         template<size_t Index>
         constexpr auto getEntry() {
-            using CurrentType = MemoryRepresentation<TypeAt_t<Index, Devices ...>>;
-            return reinterpret_cast<std::add_pointer_t<CurrentType>>(byteRepresentation.data() + offset(Index));
+            using CurrentType = MemoryRepresentation<typename TypeAt_t<Index, Devices ...>::Tag>;
+            return reinterpret_cast<std::add_pointer_t<std::add_volatile_t<CurrentType>>>(byteRepresentation + offset(Index));
         }
 
 
         template<size_t Index>
         constexpr auto getEntry() const {
-            using CurrentType = MemoryRepresentation<TypeAt_t<Index, Devices ...>>;
-            return reinterpret_cast<std::add_pointer_t<CurrentType>>(byteRepresentation.data() + offset(Index));
+            using CurrentType = MemoryRepresentation<typename TypeAt_t<Index, Devices ...>::Tag>;
+            return reinterpret_cast<std::add_pointer_t<std::add_volatile_t<CurrentType>>>(byteRepresentation + offset(Index));
         }
 
     } __attribute__((packed));
