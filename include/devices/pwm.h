@@ -4,31 +4,39 @@
 #include <cstdint>
 #include <concepts>
 
-#if __has_include("hardware/pwm.h") || ONLYGENERATE_HEADER == 0
-#include "pico/stdlib.h"
-#include "hardware/pwm.h"
-#else
-#ifndef ONLYGENERATE_HEDER
-#define ONLYGENERATE_HEADER
-#endif
-#endif
-
 #include "device_memory.h"
 #include "devices.h"
+#include "device_helper_types.h"
 
 namespace PicoDriver {
+    template<typename Pin, typename Freq>
+    requires (Freq::value > 0)
+    class PWM;
 
-    template<auto Value>
-    requires (std::is_unsigned_v<decltype(Value)>)
-    using Hz = std::integral_constant<decltype(Value), Value>;
+    template<typename Pin, typename Freq>
+    struct MemoryRepresentation<PWM<Pin, Freq>> {
+        ~MemoryRepresentation() = delete;
 
+        uint16_t pwmValue;
+    } __attribute__((packed));
+
+
+}
+
+// Device-specific code and includes
+#if !defined(MINIMAL) || MINIMAL == 0
+#include "pico/stdlib.h"
+#include "hardware/pwm.h"
+
+namespace PicoDriver {
     // TODO: add Freq type which is configurable at runtime with different MemoryRepresentation
     template<typename Pin, typename Freq>
     requires (Freq::value > 0)
     class PWM {
         public:
-        #if ONLYGENERATE_HEADER == 0
-        bool install() { 
+        
+
+        bool install(volatile MemoryRepresentation<PWM> *memory) { 
             gpio_set_function(Pin::value, GPIO_FUNC_PWM);
 
             uint sliceNum = pwm_gpio_to_slice_num(Pin::value);
@@ -40,21 +48,9 @@ namespace PicoDriver {
             pwm_set_gpio_level(Pin::value, memory->pwmValue);
             return true; 
         }
-        #else
-        bool install() { return true; }
-        bool doWork(volatile MemoryRepresentation<PWM> *memory) { return true; }
-        #endif
 
     };
 
-    template<typename Pin, typename Freq>
-    struct MemoryRepresentation<PWM<Pin, Freq>> {
-        ~MemoryRepresentation() = delete;
-
-        uint16_t pwmValue;
-    } __attribute__((packed));
-
-
-
-
 }
+
+#endif

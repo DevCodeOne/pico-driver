@@ -12,39 +12,13 @@
 #include <pico/i2c_slave.h>
 #include <pico/stdlib.h>
 
-#include "device_memory.h"
+#include "device_helper_types.h"
 #include "device_info.h"
+#include "device_memory.h"
 #include "devices.h"
 
 namespace PicoDriver {
 
-    template<size_t Number> 
-    using Baudrate = std::integral_constant<uint8_t, Number>;
-
-    template<uint16_t Number> 
-    using Address = std::integral_constant<uint8_t, Number>;
-
-    template<uint8_t Number> 
-    using Pin = std::integral_constant<uint8_t, Number>;
-
-    template<typename Pin>
-    struct SDA { 
-        static constexpr auto value = Pin::value;
-    };
-
-    template<typename Pin>
-    struct SCL { 
-        static constexpr auto value = Pin::value;
-    };
-
-    template<typename T>
-    constexpr bool IsUniqueSet(const T &iterateable) {
-        return std::accumulate(iterateable.cbegin(), iterateable.cend(), size_t{0}, [&iterateable](const auto &sum, const auto &currentElement) {
-            return sum + std::count(iterateable.cbegin(), iterateable.cend(), currentElement);
-        }) == iterateable.size();
-    }
-
-    // TODO: Add DeviceInfo in front
     template<auto *I2CDevice, typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename DeviceListTypeWithoutInfo>
     class I2CSlave {
         private:
@@ -75,8 +49,6 @@ namespace PicoDriver {
         public:
 
             static bool install() { 
-                installRuntimeDevices();
-
                 gpio_init(SDAPin::value);
                 gpio_set_function(SDAPin::value, GPIO_FUNC_I2C);
                 gpio_pull_up(SDAPin::value);
@@ -89,12 +61,16 @@ namespace PicoDriver {
                 i2c_init(I2CDevice, Baudrate::value);
 
                 i2c_slave_init(I2CDevice, I2CAddress::value, &I2CSlave::handler);
-
-                installRuntimeDevices();
                 return true; 
             }
 
             [[noreturn]] static void run() { 
+                LoopDevices::call([](auto index, auto &instance) {
+                        constexpr auto Index = decltype(index)::value + 1;
+                        return instance.install(data.template getEntry<Index>());
+                    }, runtimeDevices);
+
+
                 while(1) {
                     LoopDevices::call([](auto index, auto &instance) {
                         constexpr auto Index = decltype(index)::value + 1;
@@ -123,12 +99,6 @@ namespace PicoDriver {
                     memAddress = std::nullopt;
                     break;
                 }
-            }
-
-            static void installRuntimeDevices() {
-                LoopDevices::call([](uint16_t index, auto &instance) {
-                    return instance.install();
-                }, runtimeDevices);
             }
 
         };
