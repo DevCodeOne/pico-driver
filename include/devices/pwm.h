@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sys/wait.h>
 #include <type_traits>
 #include <cstdint>
 #include <concepts>
@@ -7,19 +8,27 @@
 #include "device_memory.h"
 #include "devices.h"
 #include "device_helper_types.h"
+#include "device_mapping.h"
 
 namespace PicoDriver {
     template<typename Pin, typename Freq>
     requires (Freq::value > 0)
     class PWM;
 
+    struct FixedPWMType {};
+
     template<typename Pin, typename Freq>
-    struct MemoryRepresentation<PWM<Pin, Freq>> {
+    struct MapToType<PWM<Pin, Freq>> {
+        using Type = MemoryRepresentation<FixedPWMType>;
+        using TagType = FixedPWMType;
+    };
+
+    template<>
+    struct MemoryRepresentation<FixedPWMType> {
         ~MemoryRepresentation() = delete;
 
         uint16_t pwmValue;
     } __attribute__((packed));
-
 
 }
 
@@ -34,9 +43,8 @@ namespace PicoDriver {
     requires (Freq::value > 0)
     class PWM {
         public:
-        
 
-        bool install(volatile MemoryRepresentation<PWM> *memory) { 
+        bool install(volatile MemoryRepresentation<FixedPWMType> *memory) { 
             gpio_set_function(Pin::value, GPIO_FUNC_PWM);
 
             uint sliceNum = pwm_gpio_to_slice_num(Pin::value);
@@ -44,7 +52,7 @@ namespace PicoDriver {
             return true; 
         }
 
-        bool doWork(volatile MemoryRepresentation<PWM> *memory) { 
+        bool doWork(volatile MemoryRepresentation<FixedPWMType> *memory) { 
             pwm_set_gpio_level(Pin::value, memory->pwmValue);
             return true; 
         }

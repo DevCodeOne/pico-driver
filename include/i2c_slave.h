@@ -19,6 +19,7 @@
 
 namespace PicoDriver {
 
+    // TODO: check max memory size of 255 when using 1-byte addresses
     template<auto *I2CDevice, typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename DeviceListTypeWithoutInfo>
     class I2CSlave {
         private:
@@ -49,6 +50,13 @@ namespace PicoDriver {
         public:
 
             static bool install() { 
+                // Init all device memory, so the device is ready, by the time i2c is started
+                LoopDevices::call([](auto index, auto &instance) {
+                        constexpr auto Index = decltype(index)::value;
+                        return instance.install(data.template getEntry<Index>());
+                    }, runtimeDevices);
+
+
                 gpio_init(SDAPin::value);
                 gpio_set_function(SDAPin::value, GPIO_FUNC_I2C);
                 gpio_pull_up(SDAPin::value);
@@ -65,15 +73,9 @@ namespace PicoDriver {
             }
 
             [[noreturn]] static void run() { 
-                LoopDevices::call([](auto index, auto &instance) {
-                        constexpr auto Index = decltype(index)::value + 1;
-                        return instance.install(data.template getEntry<Index>());
-                    }, runtimeDevices);
-
-
                 while(1) {
                     LoopDevices::call([](auto index, auto &instance) {
-                        constexpr auto Index = decltype(index)::value + 1;
+                        constexpr auto Index = decltype(index)::value;
                         return instance.doWork(data.template getEntry<Index>());
                     }, runtimeDevices);
                 }

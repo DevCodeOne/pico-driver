@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 
+#include "device_mapping.h"
 #include "device_memory.h"
 #include "device_info.h"
 #include "devices.h"
@@ -20,18 +21,19 @@ namespace RuntimeAccess {
 
     static inline constexpr size_t MaxDevices = 12;
 
-    template<typename DeviceList>
+    template<typename DeviceTagList>
     class RuntimeAccess;
 
-    template<typename ... Devices>
-    class RuntimeAccess<DeviceList<Devices ...>> {
+    // TODO: create runtime device info class, which can read the num of devices from the memory over i2c
+    template<typename ... DeviceTags>
+    class RuntimeAccess<DeviceList<DeviceTags ...>> {
         public:
-            using DeviceInfoMemoryRepresentationType = MemoryRepresentation<DeviceInfo<DeviceList<Devices ...>>>;
-            static inline constexpr std::array<size_t, sizeof...(Devices) + 1> MemorySizes{sizeof(MemoryRepresentation<Devices>) ..., sizeof(DeviceInfoMemoryRepresentationType)};
+            // using DeviceInfoMemoryRepresentationType = MappedType<DeviceInfo<DeviceList<DeviceTags ...>>>;
+            static inline constexpr std::array<size_t, sizeof...(DeviceTags) + 1> MemorySizes{sizeof(MemoryRepresentation<DeviceTags>) .../*, sizeof(DeviceInfoMemoryRepresentationType)*/};
             // TODO: ignore device info size and use next smaller size, since there's only one device info, but the next smaller device could be used <MaxDevices> times
             static inline constexpr size_t MaxPossibleMemoryLayoutSize = MaxDevices * *std::max_element(MemorySizes.cbegin(), MemorySizes.cend());
             // TODO: pointer have to point to the correct location in memory
-            using DeviceMemoryType = std::variant<std::monostate, std::add_pointer_t<MemoryRepresentation<Devices>> ..., std::add_pointer_t<DeviceInfoMemoryRepresentationType>>;
+            using DeviceMemoryType = std::variant<std::monostate, std::add_pointer_t<MemoryRepresentation<DeviceTags>> .../*, std::add_pointer_t<DeviceInfoMemoryRepresentationType>*/>;
             static std::optional<RuntimeAccess> createRuntimeAccessFromInfo(std::ranges::range auto &deviceInfo) {
                 return std::optional<RuntimeAccess>(RuntimeAccess(deviceInfo));
             }
@@ -73,7 +75,7 @@ namespace RuntimeAccess {
                 size_t currentDeviceIndex = 0;
 
                 for (auto &currentDeviceId : deviceInfo) {
-                    devices[currentDeviceIndex++] = GenerateMemoryRepresentation<sizeof...(Devices) - 1, Devices ...>
+                    devices[currentDeviceIndex++] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
                         ::generate(currentDeviceId, deviceMemory.data(), currentOffset);
                 }
             }

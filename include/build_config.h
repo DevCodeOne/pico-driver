@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <type_traits>
 
 #ifndef GENERATE_HEADER
     #define GENERATE_HEADER 1
@@ -16,19 +17,18 @@
 
 namespace PicoDriver {
     //TODO: add all devices
+    //TODO: add dummy type which can always be used for the parameters, 
+    // so one doesn't have to specify the exact type for the memory representation, when the parameter doesn't matter
+
     // Ids start at 1, since 0 is reserved for device-info
-    template<typename Pin, typename Freq>
-    struct GenId<PWM<Pin, Freq>> {
+    template<>
+    struct GenId<FixedPWMType> {
         static inline constexpr uint8_t value = 0x1;
     };
 
-    template<typename Pin>
-    struct GenId<ADC<Pin>> {
+    template<>
+    struct GenId<ADCType> {
         static inline constexpr uint8_t value = 0x2;
     };
 
-    template<typename StepPin, typename DirPin, typename Freq>
-    struct GenId<DRV8825<StepPin, DirPin, Freq>> {
-        static inline constexpr uint8_t value = 0x3;
-    };
 }

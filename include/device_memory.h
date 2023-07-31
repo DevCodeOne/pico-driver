@@ -7,17 +7,27 @@
 #include <type_traits>
 
 #include "type_utils.h"
+#include "device_mapping.h"
 
 namespace PicoDriver {
 
     template<typename Device>
     struct MemoryRepresentation;
 
+    template<typename ArrType>
+    constexpr size_t accumulateElements(const ArrType &arr) {
+        return std::accumulate(arr.cbegin(), arr.cend(), size_t{0});
+    }
+
     template<typename ... Devices>
-    requires (sizeof...(Devices) < 255)
+    concept ByteAddresseable = (accumulateElements(std::array<uint16_t, sizeof...(Devices)> { sizeof(MappedType<Devices>) ... }) < 255);
+
+    // TODO: Maybe add possibility to using multiple addresses or using 16-bit addresses
+    template<typename ... Devices>
+    requires (ByteAddresseable<Devices ...>)
     struct Memory {
 
-        static constexpr std::array<uint16_t, sizeof...(Devices)> Sizes{ sizeof(MemoryRepresentation<Devices>) ... };
+        static constexpr std::array<uint16_t, sizeof...(Devices)> Sizes{ sizeof(MappedType<Devices>) ... };
 
         volatile uint8_t byteRepresentation[std::accumulate(Sizes.cbegin(), Sizes.cend(), size_t{0})];
 
@@ -35,14 +45,14 @@ namespace PicoDriver {
 
         template<size_t Index>
         constexpr auto getEntry() {
-            using CurrentType = MemoryRepresentation<typename std::tuple_element_t<Index, std::tuple<Devices ...>>>;
+            using CurrentType = typename std::tuple_element_t<Index, std::tuple<MappedType<Devices> ...>>;
             return reinterpret_cast<std::add_pointer_t<std::add_volatile_t<CurrentType>>>(byteRepresentation + offset(Index));
         }
 
 
         template<size_t Index>
         constexpr auto getEntry() const {
-            using CurrentType = MemoryRepresentation<typename std::tuple_element_t<Index, std::tuple<Devices ...>>>;
+            using CurrentType = typename std::tuple_element_t<Index, std::tuple<MappedType<Devices> ...>>;
             return reinterpret_cast<std::add_pointer_t<std::add_volatile_t<CurrentType>>>(byteRepresentation + offset(Index));
         }
 
