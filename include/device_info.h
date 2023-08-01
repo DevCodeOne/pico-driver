@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <cstdint>
 
 #include "devices.h"
 #include "device_mapping.h"
@@ -47,12 +48,12 @@ namespace PicoDriver {
         struct ExtractDevices;
 
         template<typename ... Devices>
-        requires (IsUniqueSet(std::array<char, sizeof...(Devices) + 1>{ IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... }))
+        requires (IsUniqueSet(std::array<uint8_t, sizeof...(Devices) + 1>{ IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... }))
         struct ExtractDevices<DeviceList<Devices ...>> {
-            using ByteRepresentation = std::array<uint8_t, sizeof...(Devices) + 1>;
+            using ByteRepresentation = std::array<uint8_t, sizeof...(Devices) + 2>;
 
-            static inline constexpr size_t NumDevices = sizeof...(Devices);
-            static inline constexpr ByteRepresentation deviceIds{ IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... };
+            static inline constexpr uint8_t NumDevices = static_cast<uint8_t>(sizeof...(Devices));
+            static inline constexpr ByteRepresentation deviceIds{ NumDevices, IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... };
         };
         using ExtractDevicesType = ExtractDevices<DL>;
         using ByteRepresentation = ExtractDevicesType::ByteRepresentation;
@@ -61,7 +62,7 @@ namespace PicoDriver {
 
         ~MemoryRepresentation() = delete;
 
-        char data[ExtractDevicesType::NumDevices + 1];
+        uint8_t data[ExtractDevicesType::NumDevices + 2];
         static inline constexpr ByteRepresentation deviceIds = ExtractDevicesType::deviceIds;
     } __attribute__((packed));
 
