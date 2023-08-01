@@ -75,6 +75,14 @@ namespace RuntimeAccess {
 
             // Use this function to send the updated values to the pico
             auto rawData() const { return deviceMemory.data(); }
+
+            void swap(RuntimeAccess &other) {
+                using std::swap;
+
+                swap(devices, other.devices);
+                swap(deviceMemory, other.deviceMemory);
+                swap(deviceInfo, other.deviceInfo);
+            }
         private:
 
             template<size_t I, typename ... D>
@@ -110,5 +118,11 @@ namespace RuntimeAccess {
             std::array<uint8_t, MaxPossibleMemoryLayoutSize> deviceMemory;
             RuntimeDeviceInfoType deviceInfo;
     };
+
+
+    template<typename DeviceTagList>
+    void swap(RuntimeAccess<DeviceTagList> &lhs, RuntimeAccess<DeviceTagList> &rhs) {
+        lhs.swap(rhs);
+    }
 }
 }
