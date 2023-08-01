@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(pico-driver C CXX ASM)
 
+cmake_policy(SET CMP0077 NEW)
 option(BUILD_PICO_DEVICE_DRIVER "Set to false if consuming this" ON)
 
 if (BUILD_PICO_DEVICE_DRIVER)
