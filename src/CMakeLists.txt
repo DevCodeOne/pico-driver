@@ -1,3 +1,5 @@
+if (BUILD_PICO_DEVICE_DRIVER)
+
 add_executable(pico_driver
         pico-driver.cpp
 )
@@ -10,3 +12,8 @@ target_include_directories(pico_driver PUBLIC ../include)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(pico_driver)
+else()
+add_library(pico_driver_i2c INTERFACE)
+target_include_directories(pico_driver_i2c INTERFACE ../include)
+target_compile_definitions(pico_driver_i2c INTERFACE MINIMAL=1)
+endif()
