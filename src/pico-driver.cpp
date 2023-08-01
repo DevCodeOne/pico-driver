@@ -11,6 +11,8 @@
 #include "devices/hx711.h"
 #include "devices/drv8825.h"
 
+#include "runtime_access.h"
+
 using namespace PicoDriver;
 
 // TODO: add concepts for all the different device types
@@ -29,9 +31,11 @@ int main() {
     i2cDevice::install();
     i2cDevice::run();
 
-    /*
     std::array<uint8_t, 255> deviceMemory;
     auto access = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>::createRuntimeAccessFromInfo(deviceMemory);
+    auto otheraccess = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>::createRuntimeAccessFromInfo(deviceMemory);
+
+    swap(access, otheraccess);
 
     if (access) {
         // begin, end iterator access
@@ -41,7 +45,6 @@ int main() {
             } 
         }
     }
-    */
 
     return EXIT_SUCCESS;
 }

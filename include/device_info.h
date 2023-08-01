@@ -41,11 +41,6 @@ namespace PicoDriver {
         void swap(const DeviceInfo &other) { }
     };
 
-    template<typename DeviceL>
-    void swap(DeviceInfo<DeviceL> &lhs, DeviceInfo<DeviceL> &rhs) {
-        lhs.swap(rhs);
-    }
-
     template<typename DL>
     struct MemoryRepresentation<DeviceInfo<DL>> {
         private:

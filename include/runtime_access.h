@@ -32,14 +32,25 @@ namespace RuntimeAccess {
                 return RuntimeDeviceInfo{numDevices};
             }
 
-            uint8_t sizeInMemory() const { return m_numDevices + 1; }
-            uint8_t numDevices() const { return m_numDevices; }
+            uint8_t sizeInMemory() const { return mNumDevices + 1; }
+            uint8_t numDevices() const { return mNumDevices; }
+
+            void swap(RuntimeDeviceInfo &other) {
+                using std::swap;
+
+                swap(mNumDevices, other.mNumDevices);
+            }
 
         private:
-            RuntimeDeviceInfo(uint8_t numDevices) noexcept : m_numDevices(numDevices) {}
+            RuntimeDeviceInfo(uint8_t numDevices) noexcept : mNumDevices(numDevices) {}
 
-            const uint8_t m_numDevices;
+            uint8_t mNumDevices;
     };
+
+    template<typename TagList>
+    void swap(RuntimeDeviceInfo<TagList> &lhs, DeviceInfo<TagList> &rhs) {
+        lhs.swap(rhs);
+    }
 
     // TODO: create runtime device info class, which can read the num of devices from the memory over i2c
     template<typename ... DeviceTags>
