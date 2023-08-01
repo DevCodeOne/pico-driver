@@ -91,9 +91,6 @@ namespace RuntimeAccess {
             auto cbegin() const { return devices.cbegin(); }
             auto cend() const { return devices.end(); }
 
-            // Use this function to send the updated values to the pico
-            auto rawData() const { return deviceMemory.data(); }
-
             void swap(RuntimeAccess &other) {
                 using std::swap;
 
@@ -102,10 +99,15 @@ namespace RuntimeAccess {
                 swap(deviceInfo, other.deviceInfo);
             }
 
+            // Access to whole device memory
+            auto &rawData() { return deviceMemory; }
+            const auto &rawData() const { return deviceMemory; }
+
+            // Access to specific device memory representation
             template<typename DeviceTag>
             auto toRawMemorySlice(MemoryRepresentation<DeviceTag> *ptr) const {
                 return MemorySliceUpdate{
-                                        .address = static_cast<uint8_t>(reinterpret_cast<uint8_t *>(ptr) - rawData()),
+                                        .address = static_cast<uint8_t>(reinterpret_cast<uint8_t *>(ptr) - rawData().data()),
                                         .data = reinterpret_cast<uint8_t *>(ptr),
                                         .size = sizeof(MemoryRepresentation<DeviceTag>)
                                         };
