@@ -20,7 +20,7 @@ namespace PicoDriver {
     }
 
     template<typename ... Devices>
-    concept ByteAddresseable = (accumulateElements(std::array<uint16_t, sizeof...(Devices)> { sizeof(MappedType<Devices>) ... }) < 255);
+    concept ByteAddresseable = (accumulateElements(std::array<uint8_t, sizeof...(Devices)> { sizeof(MappedType<Devices>) ... }) < 255);
 
     // TODO: Maybe add possibility to using multiple addresses or using 16-bit addresses
     template<typename ... Devices>

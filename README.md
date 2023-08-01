@@ -6,6 +6,7 @@ Memorylayout for the devices is generated at compile time.
 # TODO
 
 - Add concepts for all the different types
+- Add possibillity to later on support bigger memory sizes than 255
 - Id system needs to take configuration into consideration
 - Implement devices
 - Add I2CSettings type

@@ -31,8 +31,8 @@ int main() {
     i2cDevice::install();
     i2cDevice::run();
 
-    std::array<char, 128> deviceInfoBytes;
-    auto access = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>::createRuntimeAccessFromInfo(deviceInfoBytes);
+    std::array<uint8_t, 255> deviceMemory;
+    auto access = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>::createRuntimeAccessFromInfo(deviceMemory);
 
     if (access) {
         // begin, end iterator access
