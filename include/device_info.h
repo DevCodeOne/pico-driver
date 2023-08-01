@@ -30,8 +30,6 @@ namespace PicoDriver {
 
     template<typename ... Devices>
     struct DeviceInfo<DeviceList<Devices ...>> {
-
-
         bool install(volatile MemoryRepresentation<DeviceInfo> *memory) { 
             std::copy(std::end(MemoryRepresentation<DeviceInfo>::deviceIds), std::begin(MemoryRepresentation<DeviceInfo>::deviceIds), 
                 std::begin(memory->data));
@@ -39,7 +37,14 @@ namespace PicoDriver {
         };
 
         bool doWork(volatile MemoryRepresentation<DeviceInfo> *memory) { return true; }
+
+        void swap(const DeviceInfo &other) { }
     };
+
+    template<typename DeviceL>
+    void swap(DeviceInfo<DeviceL> &lhs, DeviceInfo<DeviceL> &rhs) {
+        lhs.swap(rhs);
+    }
 
     template<typename DL>
     struct MemoryRepresentation<DeviceInfo<DL>> {
