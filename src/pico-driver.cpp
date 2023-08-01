@@ -32,18 +32,19 @@ int main() {
     i2cDevice::run();
 
     std::array<uint8_t, 255> deviceMemory;
-    auto access = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>::createRuntimeAccessFromInfo(deviceMemory);
-    auto otheraccess = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>::createRuntimeAccessFromInfo(deviceMemory);
-
-    swap(access, otheraccess);
+    using RuntimeAccessType = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>;
+    auto access = RuntimeAccessType::createRuntimeAccessFromInfo(deviceMemory);
 
     if (access) {
-        // begin, end iterator access
+        // Set device
         for (auto &currentDevice : (*access)) {
             if (auto pwm = std::get_if<MemoryRepresentation<FixedPWMType> *>(&currentDevice); pwm) {
                 (*pwm)->pwmValue = 0;
-            } 
+                // Send new data over i2c
+                const auto memorySlice = access->toRawMemorySlice(*pwm);
+            }
         }
+        // Update to device memory
     }
 
     return EXIT_SUCCESS;

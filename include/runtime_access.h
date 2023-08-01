@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <numeric>
 #include <ranges>
 #include <sys/wait.h>
 #include <variant>
@@ -17,6 +18,12 @@ namespace PicoDriver {
 namespace RuntimeAccess {
 
     static inline constexpr size_t MaxDevices = 12;
+
+    struct MemorySliceUpdate {
+        const uint8_t address;
+        const uint8_t * const data;
+        const uint8_t size;
+    };
 
     // This class is not allowed to use chip specific class or headers, it should be consumed by other devices, 
     // which want to communicate with this i2c_slave
@@ -58,7 +65,7 @@ namespace RuntimeAccess {
         public:
             using RuntimeDeviceInfoType = RuntimeDeviceInfo<DeviceList<DeviceTags ...>>;
 
-            static inline constexpr std::array<size_t, sizeof...(DeviceTags) + 1> MemorySizes{sizeof(MemoryRepresentation<DeviceTags>) ...};
+            static inline constexpr std::array<size_t, sizeof...(DeviceTags)> MemorySizes{sizeof(MemoryRepresentation<DeviceTags>) ...};
             // TODO: ignore device info size and use next smaller size, since there's only one device info, but the next smaller device could be used <MaxDevices> times
             static inline constexpr size_t MaxPossibleMemoryLayoutSize = MaxDevices * *std::max_element(MemorySizes.cbegin(), MemorySizes.cend());
             // TODO: pointer have to point to the correct location in memory
@@ -94,6 +101,15 @@ namespace RuntimeAccess {
                 swap(deviceMemory, other.deviceMemory);
                 swap(deviceInfo, other.deviceInfo);
             }
+
+            template<typename DeviceTag>
+            auto toRawMemorySlice(MemoryRepresentation<DeviceTag> *ptr) const {
+                return MemorySliceUpdate{
+                                        .address = static_cast<uint8_t>(reinterpret_cast<uint8_t *>(ptr) - rawData()),
+                                        .data = reinterpret_cast<uint8_t *>(ptr),
+                                        .size = sizeof(MemoryRepresentation<DeviceTag>)
+                                        };
+            }
         private:
 
             template<size_t I, typename ... D>
@@ -120,8 +136,9 @@ namespace RuntimeAccess {
                 size_t currentDeviceIndex = 0;
 
                 for (auto &currentDeviceId : deviceMemory) {
-                    devices[currentDeviceIndex++] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
+                    devices[currentDeviceIndex] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
                         ::generate(currentDeviceId, deviceMemory.data(), currentOffset);
+                    ++currentDeviceIndex;
                 }
             }
 
