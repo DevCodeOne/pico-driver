@@ -36,10 +36,16 @@ namespace PicoDriver {
         }
 
         void writeRaw(uint8_t offset, uint8_t value) {
-            byteRepresentation[offset] = value;
+            if (offset < sizeof(byteRepresentation)) {
+                byteRepresentation[offset] = value;
+            }
         }
 
         uint8_t readRaw(uint8_t offset) {
+            if (offset > sizeof(byteRepresentation)) {
+                return 0;
+            }
+
             return byteRepresentation[offset];
         }
 
