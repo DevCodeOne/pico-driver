@@ -3,21 +3,21 @@
 #include <type_traits>
 
 #include "devices.h"
-#include "gen_id.h"
+#include "device_mapping.h"
 
 namespace PicoDriver {
 
     template<typename DeviceTypeList>
     struct DeviceInfo;
 
-    template<typename DeviceTypeList>
-    struct GenId<DeviceInfo<DeviceTypeList>> {
-        static inline constexpr auto value = 0x0;
+    struct DeviceInfoType {
+        static inline constexpr uint8_t Id = 0x0;
     };
 
     template<typename ... Devices>
     struct MapToType<DeviceInfo<DeviceList<Devices ...>>> {
         using Type = MemoryRepresentation<DeviceInfo<DeviceList<Devices ...>>>;
+        using TagType = DeviceInfoType;
     };
 
     template<typename T>
@@ -47,12 +47,12 @@ namespace PicoDriver {
         struct ExtractDevices;
 
         template<typename ... Devices>
-        requires (IsUniqueSet(std::array<char, sizeof...(Devices) + 1>{ GenId<DeviceInfo<DeviceList<Devices ...>>>::value, GenId<TagType<Devices>>::value ... }))
+        requires (IsUniqueSet(std::array<char, sizeof...(Devices) + 1>{ IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... }))
         struct ExtractDevices<DeviceList<Devices ...>> {
             using ByteRepresentation = std::array<uint8_t, sizeof...(Devices) + 1>;
 
             static inline constexpr size_t NumDevices = sizeof...(Devices);
-            static inline constexpr ByteRepresentation deviceIds{ GenId<DeviceInfo<DeviceList<Devices ...>>>::value, GenId<TagType<Devices>>::value ... };
+            static inline constexpr ByteRepresentation deviceIds{ IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... };
         };
         using ExtractDevicesType = ExtractDevices<DL>;
         using ByteRepresentation = ExtractDevicesType::ByteRepresentation;

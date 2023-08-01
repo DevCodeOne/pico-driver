@@ -11,7 +11,6 @@
 #include "devices/hx711.h"
 #include "devices/drv8825.h"
 
-#include "build_config.h"
 #include "runtime_access.h"
 
 using namespace PicoDriver;

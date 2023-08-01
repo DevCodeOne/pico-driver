@@ -6,7 +6,9 @@ namespace PicoDriver {
     template<typename Pin>
     class ADC;
 
-    struct ADCType {};
+    struct ADCType {
+        static inline constexpr uint8_t Id = 0x2;
+    };
 
     template<typename Pin>
     struct MapToType<ADC<Pin>> {

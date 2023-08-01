@@ -12,15 +12,14 @@
 #include "device_info.h"
 #include "devices.h"
 
-// This class is not allowed to use chip specific class or headers, it should be consumed by other devices, 
-// which want to communicate with this i2c_slave
-
 namespace PicoDriver {
 
 namespace RuntimeAccess {
 
     static inline constexpr size_t MaxDevices = 12;
 
+    // This class is not allowed to use chip specific class or headers, it should be consumed by other devices, 
+    // which want to communicate with this i2c_slave
     template<typename DeviceTagList>
     class RuntimeAccess;
 

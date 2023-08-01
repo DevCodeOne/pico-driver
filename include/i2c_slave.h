@@ -52,9 +52,9 @@ namespace PicoDriver {
             static bool install() { 
                 // Init all device memory, so the device is ready, by the time i2c is started
                 LoopDevices::call([](auto index, auto &instance) {
-                        constexpr auto Index = decltype(index)::value;
-                        return instance.install(data.template getEntry<Index>());
-                    }, runtimeDevices);
+                       constexpr auto Index = decltype(index)::value;
+                       return instance.install(data.template getEntry<Index>());
+                   }, runtimeDevices);
 
 
                 gpio_init(SDAPin::value);

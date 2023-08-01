@@ -15,7 +15,9 @@ namespace PicoDriver {
     requires (Freq::value > 0)
     class PWM;
 
-    struct FixedPWMType {};
+    struct FixedPWMType {
+        static inline constexpr uint8_t Id = 0x1;
+    };
 
     template<typename Pin, typename Freq>
     struct MapToType<PWM<Pin, Freq>> {
