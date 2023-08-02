@@ -161,12 +161,13 @@ namespace RuntimeAccess {
                 return reinterpret_cast<MemoryRepresentation<DeviceTag> *>(static_cast<ptrdiff_t>(ptr) + rawData());
             }
 
-            template<size_t I, typename ... D>
+            template<uint8_t I, typename ... D>
             struct GenerateMemoryRepresentation{
-                static DeviceMemoryType generate(size_t index, uint8_t *base, ptrdiff_t &offset) {
+                static DeviceMemoryType generate(uint8_t index, uint8_t *base, ptrdiff_t &offset) {
                     using CurrentMemoryType = MemoryRepresentation<std::tuple_element_t<I, std::tuple<D ...>>>;
-                    if (index == I) {
-                        auto result = reinterpret_cast<CurrentMemoryType *>(offset);
+                    // DeviceId 0 is reserved for deviceinfo, so id 1 is first (0) tuple element
+                    if (index - 1 == I) {
+                        auto result = reinterpret_cast<CurrentMemoryType *>(base + offset);
                         offset += MemorySizes[I];
                         return result;
                     }
