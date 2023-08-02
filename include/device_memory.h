@@ -35,6 +35,8 @@ namespace PicoDriver {
             return std::accumulate(Sizes.cbegin(), Sizes.cbegin() + index, static_cast<uint16_t>(0));
         }
 
+        uint8_t memorySize() const { return sizeof(byteRepresentation); }
+
         void writeRaw(uint8_t offset, uint8_t value) {
             if (offset < sizeof(byteRepresentation)) {
                 byteRepresentation[offset] = value;
@@ -43,7 +45,7 @@ namespace PicoDriver {
 
         uint8_t readRaw(uint8_t offset) {
             if (offset > sizeof(byteRepresentation)) {
-                return 0;
+                return 0x00;
             }
 
             return byteRepresentation[offset];

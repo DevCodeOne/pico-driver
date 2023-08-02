@@ -31,7 +31,7 @@ namespace PicoDriver {
     template<typename ... Devices>
     struct DeviceInfo<DeviceList<Devices ...>> {
         bool install(volatile MemoryRepresentation<DeviceInfo> *memory) { 
-            std::copy(std::end(MemoryRepresentation<DeviceInfo>::deviceIds), std::begin(MemoryRepresentation<DeviceInfo>::deviceIds), 
+            std::copy(std::begin(MemoryRepresentation<DeviceInfo>::deviceIds), std::end(MemoryRepresentation<DeviceInfo>::deviceIds), 
                 std::begin(memory->data));
             return true; 
         };
@@ -53,7 +53,7 @@ namespace PicoDriver {
             using ByteRepresentation = std::array<uint8_t, sizeof...(Devices) + 2>;
 
             static inline constexpr uint8_t NumDevices = static_cast<uint8_t>(sizeof...(Devices));
-            static inline constexpr ByteRepresentation deviceIds{ NumDevices, IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... };
+            static inline constexpr ByteRepresentation deviceIds{ NumDevices , /*IdValue<DeviceInfo<DeviceList<Devices ...>>>, */IdValue<Devices> ... };
         };
         using ExtractDevicesType = ExtractDevices<DL>;
         using ByteRepresentation = ExtractDevicesType::ByteRepresentation;

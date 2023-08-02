@@ -17,6 +17,7 @@ namespace PicoDriver {
 
 namespace RuntimeAccess {
 
+    // TODO: Define via template parameter later
     static inline constexpr size_t MaxDevices = 12;
 
     struct MemorySliceUpdate {
@@ -34,12 +35,12 @@ namespace RuntimeAccess {
     class RuntimeDeviceInfo {
         public:
 
-            static std::optional<RuntimeDeviceInfo> create(std::ranges::range auto &memoryBytes) {
+            static std::optional<RuntimeDeviceInfo> create(const std::ranges::range auto &memoryBytes) {
                 uint8_t numDevices = *std::ranges::begin(memoryBytes);
                 return RuntimeDeviceInfo{numDevices};
             }
 
-            uint8_t sizeInMemory() const { return mNumDevices + 1; }
+            uint8_t sizeInMemory() const { return mNumDevices; }
             uint8_t numDevices() const { return mNumDevices; }
 
             void swap(RuntimeDeviceInfo &other) {
@@ -71,7 +72,7 @@ namespace RuntimeAccess {
             // TODO: pointer have to point to the correct location in memory
             using DeviceMemoryType = std::variant<std::monostate, std::add_pointer_t<MemoryRepresentation<DeviceTags>> ...>;
 
-            static std::optional<RuntimeAccess> createRuntimeAccessFromInfo(std::ranges::range auto &deviceMemory) {
+            static std::optional<RuntimeAccess> createRuntimeAccessFromInfo(const std::ranges::range auto &deviceMemory) {
                 auto deviceInfo = RuntimeDeviceInfoType::create(deviceMemory);
 
                 if (!deviceInfo) {
@@ -119,8 +120,9 @@ namespace RuntimeAccess {
                 static DeviceMemoryType generate(size_t index, uint8_t *base, ptrdiff_t &offset) {
                     using CurrentMemoryType = MemoryRepresentation<std::tuple_element_t<I, std::tuple<D ...>>>;
                     if (index == I) {
+                        auto result = reinterpret_cast<CurrentMemoryType *>(base + offset);
                         offset += MemorySizes[I];
-                        return reinterpret_cast<CurrentMemoryType *>(base + offset);
+                        return result;
                     }
 
                     if constexpr (I > 0) {
@@ -132,14 +134,14 @@ namespace RuntimeAccess {
             };
 
             // Range should be of type uint8_t
-            RuntimeAccess(RuntimeDeviceInfoType inst, std::ranges::range auto &deviceMemory) : deviceInfo(inst) {
+            RuntimeAccess(RuntimeDeviceInfoType inst, void *deviceMemory) : deviceInfo(inst) {
                 // Skip first byte plus numDevices to get to the first memory entry
                 ptrdiff_t currentOffset = deviceInfo.sizeInMemory();
                 size_t currentDeviceIndex = 0;
 
                 for (auto &currentDeviceId : deviceMemory) {
                     devices[currentDeviceIndex] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
-                        ::generate(currentDeviceId, deviceMemory.data(), currentOffset);
+                        ::generate(currentDeviceId, deviceMemory, currentOffset);
                     ++currentDeviceIndex;
                 }
             }
