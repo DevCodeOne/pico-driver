@@ -61,6 +61,7 @@ namespace PicoDriver {
                 if constexpr (std::is_same_v<ReturnType, void>) {
                     return callable(IndexType{}, std::get<Index>(args)) & ConstexprFor<Index - 1, Len, Args ...>::call(callable, args);
                 } else {
+                    ConstexprFor<Index - 1, Len, Args ...>::call(callable, args);
                     return callable(IndexType{}, std::get<Index>(args));
                 }
             }

@@ -37,7 +37,7 @@ namespace PicoDriver {
                 static inline Memory<DeviceInfo<DeviceListTypeWithoutInfo>, Devices ...> data;
                 static inline std::tuple<DeviceInfo<DeviceListTypeWithoutInfo>, Devices ...> runtimeDevices;
 
-                using LoopDevices = TypeUtils::ConstexprFor<0, sizeof...(Devices) + 1, DeviceInfo<DeviceListTypeWithoutInfo>, Devices ...>;
+                using LoopDevices = TypeUtils::ConstexprFor<sizeof...(Devices), sizeof...(Devices) + 1, DeviceInfo<DeviceListTypeWithoutInfo>, Devices ...>;
             };
 
             using Values = ValuesType<DeviceListType>;
@@ -75,9 +75,8 @@ namespace PicoDriver {
             static bool install() { 
                 // Init all device memory, so the device is ready, by the time i2c is started
                 LoopDevices::call([](auto index, auto &instance) {
-                       constexpr auto Index = decltype(index)::value;
-                       return instance.install(data.template getEntry<Index>());
-                       
+                        constexpr auto Index = decltype(index)::value;
+                        return instance.install(data.template getEntry<Index>());
                    }, runtimeDevices);
 
 
@@ -130,5 +129,7 @@ namespace PicoDriver {
             }
 
         };
+
+
 
 }

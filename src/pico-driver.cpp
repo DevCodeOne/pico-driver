@@ -38,7 +38,7 @@ int main() {
         sleep_ms(250);
     }
 
-    std::array<uint8_t, 255> deviceMemory;
+    /*std::array<uint8_t, 255> deviceMemory;
     using RuntimeAccessType = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>;
     auto access = RuntimeAccessType::createRuntimeAccessFromInfo(deviceMemory);
 
@@ -52,7 +52,7 @@ int main() {
             }
         }
         // Update to device memory
-    }
+    }*/
 
     return EXIT_SUCCESS;
 }

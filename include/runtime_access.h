@@ -80,7 +80,7 @@ namespace RuntimeAccess {
                     return std::nullopt;
                 }
 
-                return std::optional<RuntimeAccess>(RuntimeAccess(*deviceInfo, deviceMemory));
+                return RuntimeAccess(*deviceInfo, deviceMemory);
             }
 
             RuntimeAccess(RuntimeAccess &other) : devices(other.devices), deviceMemory(other.deviceMemory), deviceInfo(other.deviceInfo) {
@@ -147,6 +147,7 @@ namespace RuntimeAccess {
         private:
 
             void rebaseMemoryRepresentations() {
+                // Skip first byte plus numDevices to get to the first memory entry
                 ptrdiff_t currentOffset = deviceInfo.sizeInMemory();
                 size_t currentDeviceIndex = 0;
 
@@ -188,7 +189,6 @@ namespace RuntimeAccess {
             // Range should be of type uint8_t
             template<size_t ArraySize>
             RuntimeAccess(RuntimeDeviceInfoType inst, const std::array<uint8_t, ArraySize> &initialMemory) : deviceInfo(inst) {
-                // Skip first byte plus numDevices to get to the first memory entry
                 std::copy_n(std::cbegin(initialMemory), std::min(initialMemory.size(), deviceMemory.size()), std::begin(deviceMemory));
                 rebaseMemoryRepresentations();
             }
