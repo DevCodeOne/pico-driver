@@ -34,7 +34,6 @@ namespace RuntimeAccess {
     template<typename DeviceTagList>
     class RuntimeDeviceInfo {
         public:
-
             static std::optional<RuntimeDeviceInfo> create(const std::ranges::range auto &memoryBytes) {
                 uint8_t numDevices = *std::ranges::begin(memoryBytes);
                 return RuntimeDeviceInfo{numDevices};
@@ -52,7 +51,7 @@ namespace RuntimeAccess {
         private:
             RuntimeDeviceInfo(uint8_t numDevices) noexcept : mNumDevices(numDevices) {}
 
-            uint8_t mNumDevices;
+            uint8_t mNumDevices = 0;
     };
 
     template<typename TagList>
@@ -67,13 +66,12 @@ namespace RuntimeAccess {
             using RuntimeDeviceInfoType = RuntimeDeviceInfo<DeviceList<DeviceTags ...>>;
 
             static inline constexpr std::array<size_t, sizeof...(DeviceTags)> MemorySizes{sizeof(MemoryRepresentation<DeviceTags>) ...};
-            // TODO: ignore device info size and use next smaller size, since there's only one device info, but the next smaller device could be used <MaxDevices> times
-            static inline constexpr size_t MaxPossibleMemoryLayoutSize = MaxDevices * *std::max_element(MemorySizes.cbegin(), MemorySizes.cend());
+            // TODO: (MaxDevices + 1) is the max deviceinfo size possible, if there are more devices throw error
+            static inline constexpr size_t MaxPossibleMemoryLayoutSize = (MaxDevices + 1) + MaxDevices * *std::max_element(MemorySizes.cbegin(), MemorySizes.cend());
             // TODO: pointer have to point to the correct location in memory
             using DeviceMemoryType = std::variant<std::monostate, std::add_pointer_t<MemoryRepresentation<DeviceTags>> ...>;
 
-            template<size_t ArraySize>
-            static std::optional<RuntimeAccess> createRuntimeAccessFromInfo(const std::array<uint8_t, ArraySize> &deviceMemory) {
+            static std::optional<RuntimeAccess> createRuntimeAccessFromInfo(const std::ranges::range auto &deviceMemory) {
                 auto deviceInfo = RuntimeDeviceInfoType::create(deviceMemory);
 
                 if (!deviceInfo) {
@@ -83,29 +81,25 @@ namespace RuntimeAccess {
                 return RuntimeAccess(*deviceInfo, deviceMemory);
             }
 
-            RuntimeAccess(RuntimeAccess &other) : devices(other.devices), deviceMemory(other.deviceMemory), deviceInfo(other.deviceInfo) {
-                rebaseMemoryRepresentations();
-                other.rebaseMemoryRepresentations();
-            }
-
-            RuntimeAccess(RuntimeAccess &&other) : devices(other.devices), deviceMemory(other.deviceMemory), deviceInfo(other.deviceInfo) {
+            RuntimeAccess(const RuntimeAccess &other) : deviceMemory(other.deviceMemory), deviceInfo(other.deviceInfo) {
                 rebaseMemoryRepresentations();
             }
 
-            RuntimeAccess &operator=(RuntimeAccess &other) {
-                devices = other.devices;
-                deviceMemory = other.deviceMemory;
+            RuntimeAccess(RuntimeAccess &&other) : deviceMemory(other.deviceMemory), deviceInfo(other.deviceInfo) {
+                rebaseMemoryRepresentations();
+            }
+
+            RuntimeAccess &operator=(const RuntimeAccess &other) {
                 deviceInfo = other.deviceInfo;
+                deviceMemory = other.deviceMemory;
 
                 rebaseMemoryRepresentations();
-                other.rebaseMemoryRepresentations();
                 return *this;
             }
 
             RuntimeAccess &operator=(RuntimeAccess &&other) {
-                devices = std::move(other.devices);
-                deviceMemory = std::move(other.deviceMemory);
                 deviceInfo = std::move(other.deviceInfo);
+                deviceMemory = other.deviceMemory;
 
                 rebaseMemoryRepresentations();
                 return *this;
@@ -149,12 +143,12 @@ namespace RuntimeAccess {
             void rebaseMemoryRepresentations() {
                 // Skip first byte plus numDevices to get to the first memory entry
                 ptrdiff_t currentOffset = deviceInfo.sizeInMemory();
-                size_t currentDeviceIndex = 0;
 
-                for (auto &currentDeviceId : deviceMemory) {
+                for (uint8_t currentDeviceIndex = 0; currentDeviceIndex < deviceInfo.numDevices(); ++currentDeviceIndex) {
+                    // + 1 to skip number of devices in structure
+                    auto currentDeviceId = deviceMemory[currentDeviceIndex + 1];
                     devices[currentDeviceIndex] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
                         ::generate(currentDeviceId, deviceMemory.data(), currentOffset);
-                    ++currentDeviceIndex;
                 }
             }
 
@@ -168,12 +162,13 @@ namespace RuntimeAccess {
                 return reinterpret_cast<MemoryRepresentation<DeviceTag> *>(static_cast<ptrdiff_t>(ptr) + rawData());
             }
 
-            template<size_t I, typename ... D>
+            template<uint8_t I, typename ... D>
             struct GenerateMemoryRepresentation{
-                static DeviceMemoryType generate(size_t index, uint8_t *base, ptrdiff_t &offset) {
+                static DeviceMemoryType generate(uint8_t index, uint8_t *base, ptrdiff_t &offset) {
                     using CurrentMemoryType = MemoryRepresentation<std::tuple_element_t<I, std::tuple<D ...>>>;
-                    if (index == I) {
-                        auto result = reinterpret_cast<CurrentMemoryType *>(offset);
+                    // DeviceId 0 is reserved for deviceinfo, so id 1 is first (0) tuple element
+                    if (index - 1 == I) {
+                        auto result = reinterpret_cast<CurrentMemoryType *>(base + offset);
                         offset += MemorySizes[I];
                         return result;
                     }
@@ -187,15 +182,15 @@ namespace RuntimeAccess {
             };
 
             // Range should be of type uint8_t
-            template<size_t ArraySize>
-            RuntimeAccess(RuntimeDeviceInfoType inst, const std::array<uint8_t, ArraySize> &initialMemory) : deviceInfo(inst) {
+            RuntimeAccess(RuntimeDeviceInfoType inst, const std::ranges::range auto &initialMemory) : deviceInfo(inst) {
+                // Skip first byte plus numDevices to get to the first memory entry
                 std::copy_n(std::cbegin(initialMemory), std::min(initialMemory.size(), deviceMemory.size()), std::begin(deviceMemory));
                 rebaseMemoryRepresentations();
             }
 
             std::array<DeviceMemoryType, MaxDevices> devices;
             std::array<uint8_t, MaxPossibleMemoryLayoutSize> deviceMemory;
-            RuntimeDeviceInfoType deviceInfo;
+            RuntimeDeviceInfoType deviceInfo{};
     };
 
 
