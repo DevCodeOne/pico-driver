@@ -40,7 +40,7 @@ namespace RuntimeAccess {
                 return RuntimeDeviceInfo{numDevices};
             }
 
-            uint8_t sizeInMemory() const { return mNumDevices; }
+            uint8_t sizeInMemory() const { return mNumDevices + 1; }
             uint8_t numDevices() const { return mNumDevices; }
 
             void swap(RuntimeDeviceInfo &other) {
@@ -72,14 +72,15 @@ namespace RuntimeAccess {
             // TODO: pointer have to point to the correct location in memory
             using DeviceMemoryType = std::variant<std::monostate, std::add_pointer_t<MemoryRepresentation<DeviceTags>> ...>;
 
-            static std::optional<RuntimeAccess> createRuntimeAccessFromInfo(const std::ranges::range auto &deviceMemory) {
+            template<size_t ArraySize>
+            static std::optional<RuntimeAccess> createRuntimeAccessFromInfo(const std::array<uint8_t, ArraySize> &deviceMemory) {
                 auto deviceInfo = RuntimeDeviceInfoType::create(deviceMemory);
 
                 if (!deviceInfo) {
                     return std::nullopt;
                 }
 
-                return std::optional<RuntimeAccess>(RuntimeAccess(*deviceInfo, deviceMemory));
+                return std::optional<RuntimeAccess>(RuntimeAccess(*deviceInfo));
             }
 
             auto &operator[](size_t index)  { return devices[index]; }
@@ -134,14 +135,14 @@ namespace RuntimeAccess {
             };
 
             // Range should be of type uint8_t
-            RuntimeAccess(RuntimeDeviceInfoType inst, void *deviceMemory) : deviceInfo(inst) {
+            RuntimeAccess(RuntimeDeviceInfoType inst) : deviceInfo(inst) {
                 // Skip first byte plus numDevices to get to the first memory entry
                 ptrdiff_t currentOffset = deviceInfo.sizeInMemory();
                 size_t currentDeviceIndex = 0;
 
                 for (auto &currentDeviceId : deviceMemory) {
                     devices[currentDeviceIndex] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
-                        ::generate(currentDeviceId, deviceMemory, currentOffset);
+                        ::generate(currentDeviceId, deviceMemory.data(), currentOffset);
                     ++currentDeviceIndex;
                 }
             }

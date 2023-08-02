@@ -48,7 +48,8 @@ namespace PicoDriver {
         struct ExtractDevices;
 
         template<typename ... Devices>
-        requires (IsUniqueSet(std::array<uint8_t, sizeof...(Devices) + 1>{ IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... }))
+        // TODO: fix this, Ids can be the same, the types have to be different
+        // requires (IsUniqueSet(std::array<uint8_t, sizeof...(Devices) + 1>{ IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... }))
         struct ExtractDevices<DeviceList<Devices ...>> {
             using ByteRepresentation = std::array<uint8_t, sizeof...(Devices) + 2>;
 

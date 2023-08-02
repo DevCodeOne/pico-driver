@@ -31,7 +31,11 @@ namespace PicoDriver {
 
         volatile uint8_t byteRepresentation[std::accumulate(Sizes.cbegin(), Sizes.cend(), size_t{0})];
 
-        static uint16_t constexpr offset(uint16_t index) {
+        static uint8_t constexpr numDevices() {
+            return Sizes.size();
+        }
+
+        static uint8_t constexpr offset(uint8_t index) {
             return std::accumulate(Sizes.cbegin(), Sizes.cbegin() + index, static_cast<uint16_t>(0));
         }
 

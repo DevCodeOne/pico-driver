@@ -12,7 +12,7 @@
 #include "devices/hx711.h"
 #include "devices/drv8825.h"
 
-// #include "runtime_access.h"
+#include "runtime_access.h"
 
 using namespace PicoDriver;
 
@@ -21,7 +21,7 @@ static auto constexpr I2CDevice0 = i2c0;
 
 using LEDPWM = PWM<Pin<25>, Hz<100u>>;
 using DeviceStructure = DeviceList<
-                                LEDPWM, ADC<Pin<16>>
+                                LEDPWM, ADC<Pin<16>>, ADC<Pin<17>>
                             >;
 using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<4>>, SCL<Pin<5>>, Address<0x17>, Baudrate<400'000>, 
                             DeviceStructure
@@ -38,7 +38,7 @@ int main() {
         sleep_ms(250);
     }
 
-    /*std::array<uint8_t, 255> deviceMemory;
+    std::array<uint8_t, 255> deviceMemory;
     using RuntimeAccessType = RuntimeAccess::RuntimeAccess<DeviceList<FixedPWMType>>;
     auto access = RuntimeAccessType::createRuntimeAccessFromInfo(deviceMemory);
 
@@ -52,7 +52,7 @@ int main() {
             }
         }
         // Update to device memory
-    }*/
+    }
 
     return EXIT_SUCCESS;
 }

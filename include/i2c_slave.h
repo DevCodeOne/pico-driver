@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cstdio>
 #include <algorithm>
 #include <numeric>
 #include <optional>
@@ -50,9 +51,13 @@ namespace PicoDriver {
 
         public:
 
+            // TODO: do this without using stdio stuff directly
             template<size_t NumBytesPerRow>
             static void printMemoryMap() {
-                for (size_t i = 0; i < Values::data.memorySize(); ++i) {
+                for (unsigned int i = 0; i < Values::data.numDevices(); ++i) {
+                    printf("offset[%u] = %x \n", i, decltype(Values::data)::offset(i));
+                }
+                for (unsigned int i = 0; i < Values::data.memorySize(); ++i) {
                     if (i != NumBytesPerRow) {
                         printf("%x", (unsigned int) Values::data.readRaw(i));
                     } else {
