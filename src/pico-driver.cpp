@@ -21,21 +21,21 @@ static auto constexpr I2CDevice0 = i2c0;
 
 using LEDPWM = PWM<Pin<25>, Hz<100u>>;
 using DeviceStructure = DeviceList<
-                                LEDPWM, ADC<Pin<16>>, ADC<Pin<17>>
+                                LEDPWM, ADC<Pin<16>>
                             >;
 using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<4>>, SCL<Pin<5>>, Address<0x17>, Baudrate<400'000>, 
                             DeviceStructure
                         >;
 int main() {
-    stdio_init_all();
+    // stdio_init_all();
 
     i2cDevice::install();
-    puts("Installed i2c device ...");
+    // puts("Installed i2c device ...");
     while (1) {
         i2cDevice::run();
-        i2cDevice::printMemoryMap<16>();
-        printf("Got %u events \n", i2cDevice::numEvents());
-        sleep_ms(250);
+        // i2cDevice::printMemoryMap<16>();
+        // printf("Got %u events \n", i2cDevice::numEvents());
+        // sleep_ms(250);
     }
 
     /*std::array<uint8_t, 255> deviceMemory;
