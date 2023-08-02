@@ -34,10 +34,10 @@ namespace PicoDriver {
             struct ValuesType<DeviceList<Devices ...>> {
 
                 static inline std::optional<uint8_t> memAddress;
-                static inline Memory<DeviceInfo<DeviceListTypeWithoutInfo>, Devices ...> data;
-                static inline std::tuple<DeviceInfo<DeviceListTypeWithoutInfo>, Devices ...> runtimeDevices;
+                static inline Memory<Devices ...> data;
+                static inline std::tuple<Devices ...> runtimeDevices;
 
-                using LoopDevices = TypeUtils::ConstexprFor<sizeof...(Devices), sizeof...(Devices) + 1, DeviceInfo<DeviceListTypeWithoutInfo>, Devices ...>;
+                using LoopDevices = TypeUtils::ConstexprFor<sizeof...(Devices) - 1, sizeof...(Devices), Devices ...>;
             };
 
             using Values = ValuesType<DeviceListType>;
@@ -57,13 +57,13 @@ namespace PicoDriver {
                 for (unsigned int i = 0; i < Values::data.numDevices(); ++i) {
                     printf("offset[%u] = %x \n", i, decltype(Values::data)::offset(i));
                 }
-                for (unsigned int i = 0; i < Values::data.memorySize(); ++i) {
+                for (unsigned int i = decltype(Values::data)::offset(0); i < Values::data.memorySize(); ++i) {
                     if (i != NumBytesPerRow) {
-                        printf("%x", (unsigned int) Values::data.readRaw(i));
+                        printf(" %x", (unsigned int) Values::data.readRaw(i));
                     } else {
                         i = 0;
                         puts("\n");
-                        printf(" %x", (unsigned int) Values::data.readRaw(i));
+                        printf("%x ", (unsigned int) Values::data.readRaw(i));
                     }
                 }
             }

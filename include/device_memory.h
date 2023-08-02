@@ -29,7 +29,7 @@ namespace PicoDriver {
 
         static constexpr std::array<uint16_t, sizeof...(Devices)> Sizes{ sizeof(MappedType<Devices>) ... };
 
-        volatile uint8_t byteRepresentation[std::accumulate(Sizes.cbegin(), Sizes.cend(), size_t{0})];
+        volatile uint8_t byteRepresentation[accumulateElements(Sizes)];
 
         static uint8_t constexpr numDevices() {
             return Sizes.size();

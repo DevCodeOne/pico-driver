@@ -51,7 +51,7 @@ namespace PicoDriver {
         // TODO: fix this, Ids can be the same, the types have to be different
         // requires (IsUniqueSet(std::array<uint8_t, sizeof...(Devices) + 1>{ IdValue<DeviceInfo<DeviceList<Devices ...>>>, IdValue<Devices> ... }))
         struct ExtractDevices<DeviceList<Devices ...>> {
-            using ByteRepresentation = std::array<uint8_t, sizeof...(Devices) + 2>;
+            using ByteRepresentation = std::array<uint8_t, sizeof...(Devices) + 1>;
 
             static inline constexpr uint8_t NumDevices = static_cast<uint8_t>(sizeof...(Devices));
             static inline constexpr ByteRepresentation deviceIds{ NumDevices , /*IdValue<DeviceInfo<DeviceList<Devices ...>>>, */IdValue<Devices> ... };
@@ -63,7 +63,7 @@ namespace PicoDriver {
 
         ~MemoryRepresentation() = delete;
 
-        uint8_t data[ExtractDevicesType::NumDevices + 2];
+        uint8_t data[ExtractDevicesType::NumDevices + 1];
         static inline constexpr ByteRepresentation deviceIds = ExtractDevicesType::deviceIds;
     } __attribute__((packed));
 
