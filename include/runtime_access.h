@@ -80,11 +80,39 @@ namespace RuntimeAccess {
                     return std::nullopt;
                 }
 
-                return std::optional<RuntimeAccess>(RuntimeAccess(*deviceInfo));
+                return std::optional<RuntimeAccess>(RuntimeAccess(*deviceInfo, deviceMemory));
             }
 
-            auto &operator[](size_t index) { return recalculateNewPosition(devices[index]); }
-            const auto &operator[](size_t index) const { return recalculateNewPosition(devices[index]); }
+            RuntimeAccess(RuntimeAccess &other) : devices(other.devices), deviceMemory(other.deviceMemory), deviceInfo(other.deviceInfo) {
+                rebaseMemoryRepresentations();
+                other.rebaseMemoryRepresentations();
+            }
+
+            RuntimeAccess(RuntimeAccess &&other) : devices(other.devices), deviceMemory(other.deviceMemory), deviceInfo(other.deviceInfo) {
+                rebaseMemoryRepresentations();
+            }
+
+            RuntimeAccess &operator=(RuntimeAccess &other) {
+                devices = other.devices;
+                deviceMemory = other.deviceMemory;
+                deviceInfo = other.deviceInfo;
+
+                rebaseMemoryRepresentations();
+                other.rebaseMemoryRepresentations();
+                return *this;
+            }
+
+            RuntimeAccess &operator=(RuntimeAccess &&other) {
+                devices = std::move(other.devices);
+                deviceMemory = std::move(other.deviceMemory);
+                deviceInfo = std::move(other.deviceInfo);
+
+                rebaseMemoryRepresentations();
+                return *this;
+            }
+
+            auto &operator[](size_t index) { return devices[index]; }
+            const auto &operator[](size_t index) const { return devices[index]; }
 
             // iterate the memoryrepresentations of the devices
             auto begin() { return devices.begin(); }
@@ -99,6 +127,8 @@ namespace RuntimeAccess {
                 swap(devices, other.devices);
                 swap(deviceMemory, other.deviceMemory);
                 swap(deviceInfo, other.deviceInfo);
+
+                rebaseMemoryRepresentations();
             }
 
             // Access to whole device memory
@@ -115,6 +145,17 @@ namespace RuntimeAccess {
                                         };
             }
         private:
+
+            void rebaseMemoryRepresentations() {
+                ptrdiff_t currentOffset = deviceInfo.sizeInMemory();
+                size_t currentDeviceIndex = 0;
+
+                for (auto &currentDeviceId : deviceMemory) {
+                    devices[currentDeviceIndex] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
+                        ::generate(currentDeviceId, deviceMemory.data(), currentOffset);
+                    ++currentDeviceIndex;
+                }
+            }
 
             template<typename DeviceTag>
             auto *recalculateNewPosition(MemoryRepresentation<DeviceTag> *ptr) {
@@ -145,16 +186,11 @@ namespace RuntimeAccess {
             };
 
             // Range should be of type uint8_t
-            RuntimeAccess(RuntimeDeviceInfoType inst) : deviceInfo(inst) {
+            template<size_t ArraySize>
+            RuntimeAccess(RuntimeDeviceInfoType inst, const std::array<uint8_t, ArraySize> &initialMemory) : deviceInfo(inst) {
                 // Skip first byte plus numDevices to get to the first memory entry
-                ptrdiff_t currentOffset = deviceInfo.sizeInMemory();
-                size_t currentDeviceIndex = 0;
-
-                for (auto &currentDeviceId : deviceMemory) {
-                    devices[currentDeviceIndex] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
-                        ::generate(currentDeviceId, deviceMemory.data(), currentOffset);
-                    ++currentDeviceIndex;
-                }
+                std::copy_n(std::cbegin(initialMemory), std::min(initialMemory.size(), deviceMemory.size()), std::begin(deviceMemory));
+                rebaseMemoryRepresentations();
             }
 
             std::array<DeviceMemoryType, MaxDevices> devices;
