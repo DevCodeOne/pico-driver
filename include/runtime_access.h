@@ -83,8 +83,8 @@ namespace RuntimeAccess {
                 return std::optional<RuntimeAccess>(RuntimeAccess(*deviceInfo));
             }
 
-            auto &operator[](size_t index)  { return devices[index]; }
-            const auto &operator[](size_t index) const { return devices[index]; }
+            auto &operator[](size_t index) { return recalculateNewPosition(devices[index]); }
+            const auto &operator[](size_t index) const { return recalculateNewPosition(devices[index]); }
 
             // iterate the memoryrepresentations of the devices
             auto begin() { return devices.begin(); }
@@ -116,12 +116,22 @@ namespace RuntimeAccess {
             }
         private:
 
+            template<typename DeviceTag>
+            auto *recalculateNewPosition(MemoryRepresentation<DeviceTag> *ptr) {
+                return reinterpret_cast<MemoryRepresentation<DeviceTag> *>(static_cast<ptrdiff_t>(ptr) + rawData());
+            }
+
+            template<typename DeviceTag>
+            auto *recalculateNewPosition(const MemoryRepresentation<DeviceTag> *ptr) const {
+                return reinterpret_cast<MemoryRepresentation<DeviceTag> *>(static_cast<ptrdiff_t>(ptr) + rawData());
+            }
+
             template<size_t I, typename ... D>
             struct GenerateMemoryRepresentation{
                 static DeviceMemoryType generate(size_t index, uint8_t *base, ptrdiff_t &offset) {
                     using CurrentMemoryType = MemoryRepresentation<std::tuple_element_t<I, std::tuple<D ...>>>;
                     if (index == I) {
-                        auto result = reinterpret_cast<CurrentMemoryType *>(base + offset);
+                        auto result = reinterpret_cast<CurrentMemoryType *>(offset);
                         offset += MemorySizes[I];
                         return result;
                     }
@@ -157,5 +167,5 @@ namespace RuntimeAccess {
     void swap(RuntimeAccess<DeviceTagList> &lhs, RuntimeAccess<DeviceTagList> &rhs) {
         lhs.swap(rhs);
     }
-}
+    }
 }
