@@ -152,16 +152,6 @@ namespace RuntimeAccess {
                 }
             }
 
-            template<typename DeviceTag>
-            auto *recalculateNewPosition(MemoryRepresentation<DeviceTag> *ptr) {
-                return reinterpret_cast<MemoryRepresentation<DeviceTag> *>(static_cast<ptrdiff_t>(ptr) + rawData());
-            }
-
-            template<typename DeviceTag>
-            auto *recalculateNewPosition(const MemoryRepresentation<DeviceTag> *ptr) const {
-                return reinterpret_cast<MemoryRepresentation<DeviceTag> *>(static_cast<ptrdiff_t>(ptr) + rawData());
-            }
-
             template<uint8_t I, typename ... D>
             struct GenerateMemoryRepresentation{
                 static DeviceMemoryType generate(uint8_t index, uint8_t *base, ptrdiff_t &offset) {
