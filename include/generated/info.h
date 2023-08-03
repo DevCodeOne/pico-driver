@@ -1,0 +1,1 @@
+#error Don't include this header, it is only a placeholder, so that the folder is kept by git

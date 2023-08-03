@@ -11,7 +11,7 @@ target_compile_definitions(pico_driver PUBLIC -DGENERATE_HEADER=1)
 target_include_directories(pico_driver PUBLIC ../include)
 pico_enable_stdio_usb(pico_driver 1)
 pico_enable_stdio_uart(pico_driver 0)
-# pico_generate_pio_header(pico_driver ${CMAKE_CURRENT_SOURCE_DIR}/drv8825.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/include/generated)
+pico_generate_pio_header(pico_driver ${PROJECT_SOURCE_DIR}/include/drv8825.pio OUTPUT_DIR ${PROJECT_SOURCE_DIR}/include/generated)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(pico_driver)

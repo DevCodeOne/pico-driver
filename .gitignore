@@ -1,0 +1,12 @@
+*
+
+!src
+!include
+!include/**
+!CMakeLists.txt
+!.gitignore
+!compile-flags.txt
+!LICENSE
+!README.md
+
+**.pio.h
