@@ -20,8 +20,8 @@ using namespace PicoDriver;
 static auto constexpr I2CDevice0 = i2c0;
 
 using LEDPWM = PWM<Pin<25>, Hz<100u>>;
-using DosingPump = DRV8825<Pin<26>, NoDirectionPin, Hz<200u>>;
-using Servo = DRV8825<Pin<28>, Pin<27>, Hz<200u>>;
+using DosingPump = DRV8825<Pin<26>, NoDirectionPin, Pin<27>, Hz<200u>>;
+using Servo = DRV8825<Pin<28>, Pin<27>, NoEnablePin, Hz<200u>>;
 using DeviceStructure = DeviceList<
                                 LEDPWM, ADC<Pin<16>>, DosingPump, Servo
                             >;

@@ -6,43 +6,46 @@
 
 namespace PicoDriver {
     struct NoDirectionPin {};
+    struct NoEnablePin {};
 
-    template<typename StepPin, typename DirPin, typename Freq>
+    template<typename StepPin, typename DirPin, typename EnablePin, typename Freq>
     requires (Freq::value > 0)
     class DRV8825;
 
-    struct StepperMotorWithDir {
-        static inline constexpr uint8_t Id = 0x3;
+    template<typename DirPin, typename EnablePin>
+    struct StepperMotorTag {
+        static inline constexpr uint8_t Id = 0x3 + (std::is_same_v<DirPin, NoDirectionPin> ? 1 : 0) + (std::is_same_v<EnablePin, NoEnablePin> ? 2 : 0);
     };
 
-    struct StepperMotorWithoutDir {
-        static inline constexpr uint8_t Id = 0x4;
-    };
-
-    template<typename StepPin, typename DirPin, typename Freq>
-    struct MapToType<DRV8825<StepPin, DirPin, Freq>> {
-        using TagType = StepperMotorWithDir;
+    template<typename StepPin, typename DirPin, typename EnablePin, typename Freq>
+    struct MapToType<DRV8825<StepPin, DirPin, EnablePin, Freq>> {
+        using TagType = StepperMotorTag<DirPin, EnablePin>;
         using Type = MemoryRepresentation<TagType>;
-    };
 
-    template<typename StepPin, typename Freq>
-    struct MapToType<DRV8825<StepPin, NoDirectionPin, Freq>> {
-        using TagType = StepperMotorWithoutDir;
-        using Type = MemoryRepresentation<TagType>;
+        // TODO: use this type to allocate resources at compile time; so pins can't be used multiple times, except when using as a bus (e.g. i2c)
+        using UsedPins = std::tuple<StepPin, DirPin, EnablePin>;
     };
 
     enum struct StepperDirection : uint8_t { Left, Right };
 
-    template<>
-    struct MemoryRepresentation<StepperMotorWithDir> {
-        ~MemoryRepresentation() = delete;
+    template<typename Pin>
+    struct EnableValue {
+        bool enable;
+    };
 
-        uint16_t steps;
+    template<>
+    struct EnableValue<NoEnablePin> {};
+
+    template<typename Pin>
+    struct DirectionValue {
         StepperDirection direction;
-    } __attribute__((packed));
+    };
 
     template<>
-    struct MemoryRepresentation<StepperMotorWithoutDir> {
+    struct DirectionValue<NoDirectionPin> {};
+
+    template<typename DirPin, typename EnablePin>
+    struct MemoryRepresentation<StepperMotorTag<DirPin, EnablePin>> final : public DirectionValue<DirPin>, public EnableValue<EnablePin> {
         ~MemoryRepresentation() = delete;
 
         uint16_t steps;
@@ -53,23 +56,40 @@ namespace PicoDriver {
 // Device-specific code and includes
 #if !defined(MINIMAL) || MINIMAL == 0
 
+#include "generated/drv8825.pio.h"
+
 namespace PicoDriver {
-    template<typename StepPin, typename DirPin, typename Freq>
+    template<typename StepPin, typename DirPin, typename EnablePin, typename Freq>
     requires (Freq::value > 0)
     class DRV8825 {
         public:
 
-        bool install(volatile MemoryRepresentation<StepperMotorWithDir> *memory) { return true; }
-        bool doWork(volatile MemoryRepresentation<StepperMotorWithDir> *memory) { return true; }
+        using Tag = StepperMotorTag<DirPin, EnablePin>;
+
+        bool install(volatile MemoryRepresentation<Tag> *memory) { return true; }
+        bool doWork(volatile MemoryRepresentation<Tag> *memory) { 
+            setEnable(memory);
+            setDirection(memory);
+            return true; 
+        }
+
+        private:
+
+        template<typename T, typename = decltype((void) T::direction)>
+        bool setDirection(volatile T *memory) {
+            memory->direction = StepperDirection::Left;
+            return true;
+        }
+        bool setDirection(...) { return true; }
+
+
+        template<typename T, typename = decltype((void) T::enable)>
+        bool setEnable(volatile T *memory) {
+            memory->enable = 0;
+            return true;
+        }
+        bool setEnable(...) { return true; }
     };
 
-    template<typename StepPin, typename Freq>
-    requires (Freq::value > 0)
-    class DRV8825<StepPin, NoDirectionPin, Freq> {
-        public:
-
-        bool install(volatile MemoryRepresentation<StepperMotorWithoutDir> *memory) { return true; }
-        bool doWork(volatile MemoryRepresentation<StepperMotorWithoutDir> *memory) { return true; }
-    };
 }
 #endif
