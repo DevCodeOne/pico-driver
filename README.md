@@ -1,7 +1,9 @@
 # What it is
 
 Generate custom i2c device which can be controlled by another controller.
-Memorylayout for the devices is generated at compile time.
+The memorylayout for the devices is generated at compile time.
+This system can be used to program microcontrollers, which are used on pcbs and use hardwired devices.
+Instead of buying gpio expanders, or pwm drivers one can use inexpensive microcontrollers.
 
 # TODO
 
