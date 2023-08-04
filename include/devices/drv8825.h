@@ -110,10 +110,7 @@ namespace PicoDriver {
         }
 
         bool doWork(volatile MemoryRepresentation<Tag> *memory) { 
-            // TODO: Test, remove later
-            memory->steps = 2;
             stepsToDo += memory->steps;
-            memory->steps = 0;
 
             // TODO: this should be an interrupt, or maybe not
             if (stepsToDo > 0 && !dma_channel_is_busy(DeviceResources::channel)) {
