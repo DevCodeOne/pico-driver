@@ -55,6 +55,7 @@ namespace PicoDriver {
         }
 
         bool doWork(volatile MemoryRepresentation<FixedPWMType> *memory) { 
+            memory->pwmValue = 0x1220;
             pwm_set_gpio_level(Pin::value, memory->pwmValue);
             return true; 
         }

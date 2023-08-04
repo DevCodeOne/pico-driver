@@ -1,2 +1,35 @@
 .program drv8825
-.side_set 1
+
+; Input bitmap, switch on / off pin
+; The PIO will run at a specific carrier frequency e.g. 2000Hz
+; To run the servo at 50 Hz the bitmap would look like this:
+; 0b101010 ....
+; To run at 25 Hz:
+; 0b00100....
+; So the fastest the servo could be clocked @ 100Hz in this example.
+; When the frequency is increased the input would have to be longer, for slower steps
+
+.wrap_target
+    set X, (10 - 1)
+    out pins, 1 [9] ; 10-Cycles -> 2000 Hz -> 200 Hz
+rinse:
+    jmp X--, rinse
+.wrap
+
+% c-sdk {
+static inline void drv8825_program_init(PIO pio, uint sm, uint offset, uint pin, uint16_t div) {
+    pio_sm_config c = drv8825_program_get_default_config(offset);
+
+    // Map the state machine's OUT pin group to one pin, namely the `pin`
+    // parameter to this function.
+    sm_config_set_out_pins(&c, pin, 1);
+    // Set this pin's GPIO function (connect PIO to the pad)
+    pio_gpio_init(pio, pin);
+    // Set the pin direction to output at the PIO
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+    sm_config_set_clkdiv(&c, div);
+    sm_config_set_out_shift(&c, true, true, 16);
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
