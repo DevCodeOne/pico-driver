@@ -34,9 +34,8 @@ namespace PicoDriver {
     };
 
     template<typename DirPin, typename EnablePin>
-    struct StepperMotorTag {
+    struct StepperMotorTag : public StepperTagName<DirPin, EnablePin> {
         static inline constexpr uint8_t Id = 0x3 + (std::is_same_v<DirPin, NoDirectionPin> ? 1 : 0) + (std::is_same_v<EnablePin, NoEnablePin> ? 2 : 0);
-        static inline constexpr char *Name = StepperTagName<DirPin, EnablePin>::Name;
     };
 
     template<typename DeviceResource, typename StepPin, typename DirPin, typename EnablePin, typename Freq>
