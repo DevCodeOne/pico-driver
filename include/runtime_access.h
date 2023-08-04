@@ -59,9 +59,24 @@ namespace RuntimeAccess {
         lhs.swap(rhs);
     }
 
+    template<typename ...DeviceTags>
+    struct RuntimeDeviceEntry final : public std::variant<std::monostate, DeviceTags ...> {
+        const char *tagName() const {
+            return std::visit(
+                    TypeUtils::OverloadedVisitor{
+                            [](const auto &currentArg) {
+                                return ExtractMemoryTag<std::remove_pointer_t<std::decay_t<decltype(currentArg)>>>::Name;
+                            },
+                            [](const std::monostate) {
+                                return "None";
+                            }
+                        }, *this);
+        }
+    };
+
     // TODO: create runtime device info class, which can read the num of devices from the memory over i2c
     template<typename ... DeviceTags>
-    class RuntimeAccess<DeviceList<DeviceTags ...>> {
+    class RuntimeAccess<DeviceList<DeviceTags ...>> final {
         public:
             using RuntimeDeviceInfoType = RuntimeDeviceInfo<DeviceList<DeviceTags ...>>;
 
@@ -69,7 +84,7 @@ namespace RuntimeAccess {
             // TODO: (MaxDevices + 1) is the max deviceinfo size possible, if there are more devices throw error
             static inline constexpr size_t MaxPossibleMemoryLayoutSize = (MaxDevices + 1) + MaxDevices * *std::max_element(MemorySizes.cbegin(), MemorySizes.cend());
             // TODO: pointer have to point to the correct location in memory
-            using DeviceMemoryType = std::variant<std::monostate, std::add_pointer_t<MemoryRepresentation<DeviceTags>> ...>;
+            using DeviceMemoryType = RuntimeDeviceEntry<std::add_pointer_t<MemoryRepresentation<DeviceTags>> ...>;
 
             static std::optional<RuntimeAccess> createRuntimeAccessFromInfo(const std::ranges::range auto &deviceMemory) {
                 auto deviceInfo = RuntimeDeviceInfoType::create(deviceMemory);
@@ -158,7 +173,7 @@ namespace RuntimeAccess {
                     using CurrentMemoryType = MemoryRepresentation<std::tuple_element_t<I, std::tuple<D ...>>>;
                     // DeviceId 0 is reserved for deviceinfo, so id 1 is first (0) tuple element
                     if (index - 1 == I) {
-                        auto result = reinterpret_cast<CurrentMemoryType *>(base + offset);
+                        auto result = DeviceMemoryType{reinterpret_cast<CurrentMemoryType *>(base + offset)};
                         offset += MemorySizes[I];
                         return result;
                     }
@@ -166,7 +181,7 @@ namespace RuntimeAccess {
                     if constexpr (I > 0) {
                         return GenerateMemoryRepresentation<I - 1, D ...>::generate(index, base, offset);
                     } else {
-                        return std::monostate{};
+                        return DeviceMemoryType{std::monostate{}};
                     }
                 }
             };

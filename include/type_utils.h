@@ -58,7 +58,7 @@ namespace PicoDriver {
             static auto call(Callable callable, std::tuple<Args ...> &args) {
                 using ReturnType = decltype(ConstexprFor<Index - 1, Len, Args ...>::call(callable, args));
                 using IndexType = std::integral_constant<uint16_t, Index>;
-                if constexpr (std::is_same_v<ReturnType, void>) {
+                if constexpr (!std::is_same_v<ReturnType, void>) {
                     return callable(IndexType{}, std::get<Index>(args)) & ConstexprFor<Index - 1, Len, Args ...>::call(callable, args);
                 } else {
                     ConstexprFor<Index - 1, Len, Args ...>::call(callable, args);
@@ -75,6 +75,9 @@ namespace PicoDriver {
                 return callable(IndexType{}, std::get<0>(args));
             }
         };
+
+        template<typename ...T>
+        struct OverloadedVisitor : T ... { using T::operator()...; };
 
     }
 }

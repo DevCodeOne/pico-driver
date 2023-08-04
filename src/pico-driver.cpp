@@ -58,12 +58,15 @@ int main() {
     auto access = RuntimeAccessType::createRuntimeAccessFromInfo(deviceMemory);
 
     if (access) {
+        const char *tagName = "DStepper";
         // Set device
         for (auto &currentDevice : (*access)) {
-            if (auto pwm = std::get_if<MemoryRepresentation<FixedPWMType> *>(&currentDevice); pwm) {
-                (*pwm)->pwmValue = 0;
-                // Send new data over i2c
-                const auto memorySlice = access->toRawMemorySlice(*pwm);
+            if (std::string_view("FPWM") == currentDevice.tagName()) {
+                if (auto pwm = std::get_if<MemoryRepresentation<FixedPWMType> *>(&currentDevice); pwm) {
+                    (*pwm)->pwmValue = 0;
+                    // Send new data over i2c
+                    const auto memorySlice = access->toRawMemorySlice(*pwm);
+                }
             }
         }
         // Update to device memory

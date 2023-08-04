@@ -14,6 +14,19 @@ namespace PicoDriver {
     template<typename Device>
     struct MemoryRepresentation;
 
+    namespace Detail {
+        template<typename MemoryType>
+        struct ExtractMemoryTag;
+
+        template<typename TagType>
+        struct ExtractMemoryTag<MemoryRepresentation<TagType>> {
+            using Type = TagType;
+        };
+    }
+
+    template<typename MemoryType>
+    using ExtractMemoryTag = Detail::ExtractMemoryTag<MemoryType>::Type;
+
     template<typename ArrType>
     constexpr size_t accumulateElements(const ArrType &arr) {
         return std::accumulate(arr.cbegin(), arr.cend(), size_t{0});

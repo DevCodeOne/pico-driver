@@ -14,8 +14,29 @@ namespace PicoDriver {
     class DRV8825;
 
     template<typename DirPin, typename EnablePin>
+    struct StepperTagName {
+        static inline constexpr char Name[] = "DEStepper";
+    };
+
+    template<typename EnablePin>
+    struct StepperTagName<NoDirectionPin, EnablePin> {
+        static inline constexpr char Name[] = "EStepper";
+    };
+
+    template<typename DirPin>
+    struct StepperTagName<DirPin, NoEnablePin> {
+        static inline constexpr char Name[] = "DStepper";
+    };
+
+    template<>
+    struct StepperTagName<NoDirectionPin, NoEnablePin> {
+        static inline constexpr char Name[] = "Stepper";
+    };
+
+    template<typename DirPin, typename EnablePin>
     struct StepperMotorTag {
         static inline constexpr uint8_t Id = 0x3 + (std::is_same_v<DirPin, NoDirectionPin> ? 1 : 0) + (std::is_same_v<EnablePin, NoEnablePin> ? 2 : 0);
+        static inline constexpr char *Name = StepperTagName<DirPin, EnablePin>::Name;
     };
 
     template<typename DeviceResource, typename StepPin, typename DirPin, typename EnablePin, typename Freq>

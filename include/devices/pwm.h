@@ -17,6 +17,7 @@ namespace PicoDriver {
 
     struct FixedPWMType {
         static inline constexpr uint8_t Id = 0x1;
+        static inline constexpr char Name[] = "FPWM";
     };
 
     template<typename Pin, typename Freq>

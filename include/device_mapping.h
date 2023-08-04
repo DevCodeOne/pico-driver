@@ -12,6 +12,9 @@ template<typename T>
 using TagType = typename MapToType<T>::TagType;
 
 template<typename T>
+static inline constexpr auto IdName = MapToType<T>::Name;
+
+template<typename T>
 static inline constexpr auto IdValue = MapToType<T>::TagType::Id;
 
 }

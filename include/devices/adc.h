@@ -33,6 +33,7 @@ namespace PicoDriver {
 
     struct ADCType {
         static inline constexpr uint8_t Id = 0x2;
+        static inline constexpr char Name[] = "ADC";
     };
 
     template<typename Pin, typename Channel>
