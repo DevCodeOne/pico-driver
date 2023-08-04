@@ -9,8 +9,6 @@ namespace PicoDriver {
     struct NoDirectionPin {};
     struct NoEnablePin {};
 
-    struct PinUsed : std::integral_constant<uint8_t, 16> {};
-
     template<typename DeviceResources, typename StepPin, typename DirPin, typename EnablePin, typename Freq>
     requires (Freq::value > 0)
     class DRV8825;

@@ -10,6 +10,8 @@ namespace PicoDriver {
     template<uint8_t Number> 
     using Pin = std::integral_constant<uint8_t, Number>;
 
+    struct PinUsed : std::integral_constant<uint8_t, 16> {};
+
     template<auto Value>
     requires (std::is_unsigned_v<decltype(Value)>)
     using Hz = std::integral_constant<decltype(Value), Value>;
