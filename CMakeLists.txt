@@ -1,4 +1,5 @@
 option(BUILD_PICO_DEVICE_DRIVER "Set to false if consuming this" ON)
+option(MAX_DEVICES "Max number of devices which can be used at runtime", 16);
 cmake_policy(SET CMP0077 NEW)
 
 if (BUILD_PICO_DEVICE_DRIVER)

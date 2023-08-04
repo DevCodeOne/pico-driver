@@ -7,6 +7,7 @@ Instead of buying gpio expanders, or pwm drivers one can use inexpensive microco
 
 # TODO
 
+- Add multiple definitions, which can be used and are differentiable via their address
 - Add concepts for all the different types
 - Add possibility to later on support bigger memory sizes than 255
 - Id system needs to take configuration into consideration
