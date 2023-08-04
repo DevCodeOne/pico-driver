@@ -57,7 +57,7 @@ namespace PicoDriver {
 // Device-specific code and includes
 #if !defined(MINIMAL) || MINIMAL == 0
 
-#include <charconv>
+#include <mutex>
 
 #include "generated/drv8825.pio.h"
 
@@ -65,6 +65,12 @@ namespace PicoDriver {
 
 // TODO: add PIO device resource or program
 namespace PicoDriver {
+
+    struct DRV8825Program {
+        static uint offset;
+        static std::once_flag initProgram;
+    };
+
     template<typename DeviceResources, typename StepPin, typename DirPin, typename EnablePin, typename Freq>
     requires (Freq::value > 0)
     class DRV8825 {
@@ -73,9 +79,12 @@ namespace PicoDriver {
         using Tag = StepperMotorTag<DirPin, EnablePin>;
 
         bool install(volatile MemoryRepresentation<Tag> *memory) { 
-            const auto offset = pio_add_program(DeviceResources::Device, &drv8825_program);
+            std::call_once(DRV8825Program::initProgram, []() {
+                DRV8825Program::offset = pio_add_program(DeviceResources::Device, &drv8825_program);
+            });
+            // TODO: Set clkdiv to multiple of Freq
             drv8825_program_init(DeviceResources::Device, DeviceResources::StateMachine, 
-                offset, PICO_DEFAULT_LED_PIN, static_cast<uint16_t>(125'000'000ull / 2000));
+                DRV8825Program::offset, StepPin::value, static_cast<uint16_t>(125'000'000ull / 2000));
                         return true; 
         }
 

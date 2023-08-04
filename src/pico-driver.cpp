@@ -31,7 +31,8 @@ using DosingPump = DRV8825<PicoResource<PIOResource<PIODevice::Zero, PIOStateMac
 // using Servo = DRV8825<PicoResource<PIOResource<PIODevice::Zero, PIOStateMachine::One>, DMAResource<DMAChannel::One>>, 
 //                             Pin<28>, Pin<27>, NoEnablePin, Hz<200u>>;
 using DeviceStructure = DeviceList<
-                                DosingPump
+                                DosingPump,
+                                ADC<NoInputPin, Channel<ADCChannel::Four>>
                                 // LEDPWM/*, ADC<Pin<16>>, */
                             >;
 using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<4>>, SCL<Pin<5>>, Address<0x17>, Baudrate<400'000>, 
@@ -41,7 +42,9 @@ int main() {
     stdio_init_all();
     printf("%lu \n", clock_get_hz(clk_sys));
 
+
     i2cDevice::install();
+    adc_set_temp_sensor_enabled(true);
     // puts("Installed i2c device ...");
     while (1) {
         i2cDevice::run();

@@ -2,7 +2,7 @@ option(BUILD_PICO_DEVICE_DRIVER "Set to false if consuming this" ON)
 cmake_policy(SET CMP0077 NEW)
 
 if (BUILD_PICO_DEVICE_DRIVER)
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.5)
 include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
 project(pico-driver C CXX ASM)
 

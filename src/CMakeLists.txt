@@ -1,11 +1,13 @@
 if (BUILD_PICO_DEVICE_DRIVER)
 
 add_executable(pico_driver
+        drv8825.cpp
+        adc.cpp
         pico-driver.cpp
 )
 
 # pull in common dependencies
-target_link_libraries(pico_driver pico_stdlib pico_i2c_slave hardware_i2c hardware_pwm hardware_pio hardware_dma)
+target_link_libraries(pico_driver pico_stdlib pico_i2c_slave hardware_i2c hardware_pwm hardware_pio hardware_dma hardware_adc)
 target_compile_options(pico_driver PUBLIC -Os)
 target_include_directories(pico_driver PUBLIC ../include)
 pico_enable_stdio_usb(pico_driver 1)
