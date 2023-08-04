@@ -19,7 +19,7 @@ namespace RuntimeAccess {
 
     // TODO: Define via template parameter later
     #ifndef MAX_DEVICES
-    #warning MAX_DEVICES isn't set per cmake
+    #warning MAX_DEVICES is not set with cmake
     #define MAX_DEVICES 16
     #endif
     static inline constexpr size_t MaxDevices = MAX_DEVICES;
