@@ -42,6 +42,7 @@ namespace PicoDriver {
 
 namespace PicoDriver {
     // TODO: add Freq type which is configurable at runtime with different MemoryRepresentation
+    // TODO: set Freq for pwm
     template<typename Pin, typename Freq>
     requires (Freq::value > 0)
     class PWM {

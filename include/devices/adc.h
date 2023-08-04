@@ -1,6 +1,7 @@
 #pragma once
 
 #include "device_memory.h"
+#include <type_traits>
 
 namespace PicoDriver {
     struct NoInputPin {};
@@ -9,11 +10,9 @@ namespace PicoDriver {
         Zero = 0, One = 1, Two = 2, Three = 3, Four = 4
     };
 
-    // TODO: add check, when pin is used, channel isn't 4
+    // TODO: add check that used channel isn't 4, when a pin is used
     template<typename Pin>
-    struct IsPinAcceptable {
-        static inline constexpr bool value = Pin::value >= 26 || Pin::value <= 29;
-    };
+    struct IsPinAcceptable : std::conditional_t<Pin::value >= 26 && Pin::value <= 29, std::true_type, std::false_type> { };
 
     template<>
     struct IsPinAcceptable<NoInputPin> : std::true_type { };

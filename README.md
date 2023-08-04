@@ -10,7 +10,7 @@ Instead of buying gpio expanders, or pwm drivers one can use inexpensive microco
 - Add concepts for all the different types
 - Add possibility to later on support bigger memory sizes than 255
 - Id system needs to take configuration into consideration
-- Implement devices
+- Implement more devices
 - Add I2CSettings type
 - Add possible input adapter, to support e.g. can bus in the future
 - Add i2c master, to that it can be used as a hub
