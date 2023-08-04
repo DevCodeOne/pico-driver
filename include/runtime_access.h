@@ -145,12 +145,13 @@ namespace RuntimeAccess {
             const auto &rawData() const { return deviceMemory; }
 
             // Access to specific device memory representation
-            template<typename DeviceTag>
-            auto toRawMemorySlice(MemoryRepresentation<DeviceTag> *ptr) const {
+            // TODO: check if DeviceTag is contained int the DeviceTag List
+            template<typename DT>
+            auto toRawMemorySlice(const MemoryRepresentation<DT> *const ptr) const {
                 return MemorySliceUpdate{
-                                        .address = static_cast<uint8_t>(reinterpret_cast<uint8_t *>(ptr) - rawData().data()),
-                                        .data = reinterpret_cast<uint8_t *>(ptr),
-                                        .size = sizeof(MemoryRepresentation<DeviceTag>)
+                                        .address = static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(ptr) - rawData().data()),
+                                        .data = reinterpret_cast<const uint8_t *>(ptr),
+                                        .size = sizeof(MemoryRepresentation<DT>)
                                         };
             }
         private:
