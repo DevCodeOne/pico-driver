@@ -16,3 +16,6 @@ Instead of buying gpio expanders, or pwm drivers one can use inexpensive microco
 - Add possible input adapter, to support e.g. can bus in the future
 - Add i2c master, to that it can be used as a hub
 - Maybe safe last state into flash
+
+## TODO sometime later, don't know how to do that nicely
+- Add some kind of mechanism to generate device via build-system
