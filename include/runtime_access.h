@@ -71,9 +71,7 @@ namespace RuntimeAccess {
                             [](const auto &currentArg) {
                                 return ExtractMemoryTag<std::remove_pointer_t<std::decay_t<decltype(currentArg)>>>::Name;
                             },
-                            [](const std::monostate) {
-                                return "None";
-                            }
+                            [](const std::monostate &) { return "None"; }
                         }, *this);
         }
     };
@@ -165,7 +163,7 @@ namespace RuntimeAccess {
                 ptrdiff_t currentOffset = deviceInfo.sizeInMemory();
 
                 for (uint8_t currentDeviceIndex = 0; currentDeviceIndex < deviceInfo.numDevices(); ++currentDeviceIndex) {
-                    // + 1 to skip number of devices in structure
+                    // + 1 to skip number of devices in structure DeviceInfo has Id 0, ignoring
                     auto currentDeviceId = deviceMemory[currentDeviceIndex + 1];
                     devices[currentDeviceIndex] = GenerateMemoryRepresentation<sizeof...(DeviceTags) - 1, DeviceTags ...>
                         ::generate(currentDeviceId, deviceMemory.data(), currentOffset);
@@ -175,9 +173,10 @@ namespace RuntimeAccess {
             template<uint8_t I, typename ... D>
             struct GenerateMemoryRepresentation{
                 static DeviceMemoryType generate(uint8_t index, uint8_t *base, ptrdiff_t &offset) {
-                    using CurrentMemoryType = MemoryRepresentation<std::tuple_element_t<I, std::tuple<D ...>>>;
+                    using CurrentTagType = std::tuple_element_t<I, std::tuple<D ...>>;
+                    using CurrentMemoryType = MemoryRepresentation<CurrentTagType>;
                     // DeviceId 0 is reserved for deviceinfo, so id 1 is first (0) tuple element
-                    if (index - 1 == I) {
+                    if (index == CurrentTagType::Id) {
                         auto result = DeviceMemoryType{reinterpret_cast<CurrentMemoryType *>(base + offset)};
                         offset += MemorySizes[I];
                         return result;
