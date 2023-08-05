@@ -22,7 +22,6 @@ using namespace PicoDriver;
 // TODO: add concepts for all the different device types
 static auto constexpr I2CDevice0 = i2c0;
 
-
 // TODO: do resource check
 // TODO: add pins to resources somehow (values can't be named the same), or use a tuple in the future
 using DosingPump = DRV8825<PicoResource<PIOResource<PIODevice::Zero, PIOStateMachine::Zero>, DMAResource<DMAChannel::Two>>,

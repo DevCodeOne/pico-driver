@@ -7,6 +7,7 @@ Instead of buying gpio expanders, or pwm drivers one can use inexpensive microco
 
 # TODO
 
+- Add some sort of interrupt pin, which can be driven high, to notify the master of an some event
 - Add memoryrepresentation sizes, so that unsupported types can at least be skipped
 - Add multiple definitions, which can be used and are differentiable via their address
 - Add concepts for all the different types

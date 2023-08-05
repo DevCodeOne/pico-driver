@@ -9,6 +9,12 @@ namespace PicoDriver {
     struct NoDirectionPin {};
     struct NoEnablePin {};
 
+    using DRV8825SettingsType = uint8_t;
+
+    namespace DRV8825Settings {
+        static inline constexpr uint8_t DisableAfterSteps = 0b1;
+    }
+
     template<typename DeviceResources, typename StepPin, typename DirPin, typename EnablePin, typename Freq>
     requires (Freq::value > 0)
     class DRV8825;
@@ -72,6 +78,7 @@ namespace PicoDriver {
         ~MemoryRepresentation() = delete;
 
         uint16_t steps;
+        DRV8825SettingsType settings;
     } __attribute__((packed));
 
 }
@@ -79,6 +86,7 @@ namespace PicoDriver {
 // Device-specific code and includes
 #if !defined(MINIMAL) || MINIMAL == 0
 
+#include <optional>
 #include <mutex>
 
 #include "generated/drv8825.pio.h"
@@ -108,19 +116,25 @@ namespace PicoDriver {
             drv8825_program_init(DeviceResources::Device, DeviceResources::StateMachine, 
                 DRV8825Program::offset, StepPin::value, static_cast<uint16_t>(125'000'000ull / 2000));
                         return true; 
+            initDirection(memory);
+            initEnable(memory);
         }
 
         bool doWork(volatile MemoryRepresentation<Tag> *memory) { 
             stepsToDo += memory->steps;
+            memory->steps = 0;
+            setEnable(memory);
+            setDirection(memory);
 
             // TODO: this should be an interrupt, or maybe not
-            if (stepsToDo > 0 && !dma_channel_is_busy(DeviceResources::channel)) {
-                // TODO: If Direction was changed abort dma and do update
-                setEnable(memory);
-                setDirection(memory);
-            } else {
-                // There's still data to be send, go on
+            if (stepsToDo == 0 || dma_channel_is_busy(DeviceResources::channel)) {
+                if (stepsToDo == 0 && !dma_channel_is_busy(DeviceResources::channel)) {
+                    // If above is true, work is done, disable stepper if setting is set
+                    setEnable(memory);
+                }
                 return true;
+            } else {
+                setEnable(memory);
             }
             auto [stepsTaken, wordsToTransfer] = calculateMasks(stepsToDo);
             stepsToDo -= stepsTaken;
@@ -185,19 +199,65 @@ namespace PicoDriver {
         }
 
         template<typename T, typename = decltype((void) T::direction)>
-        bool setDirection(volatile T *memory) {
-            memory->direction = StepperDirection::Left;
+        bool initDirection(volatile T *memory) {
+            gpio_init(DirPin::Value);
+            gpio_set_dir(DirPin::Value, GPIO_OUT);
             return true;
         }
+
+        bool initDirection(...) { return true; }
+
+
+        template<typename T, typename = decltype((void) T::direction)>
+        bool setDirection(volatile T *memory) {
+            // TODO: Abort dma_channel transmition and start again ?
+            // For now wait for end of the transmission
+            if (!stepsTransmitted()) {
+                return true;
+            }
+
+            gpio_put(DirPin::value, memory->direction);
+
+            // TODO: set direction
+            return true;
+        }
+
         bool setDirection(...) { return true; }
 
+        template<typename T, typename = decltype((void) T::enable)>
+        bool initEnable(volatile T *memory) {
+            gpio_init(EnablePin::value);
+            gpio_set_dir(EnablePin::value, GPIO_OUT);
+            // Disable driver
+            gpio_put(EnablePin::value, 1);
+            return true;
+        }
+
+        bool initEnable(...) { return true; }
 
         template<typename T, typename = decltype((void) T::enable)>
         bool setEnable(volatile T *memory) {
-            memory->enable = 0;
+            bool newValue = false;
+            if (!stepsTransmitted()) {
+                newValue = true;
+            } else if (memory->settings & DRV8825Settings::DisableAfterSteps) {
+                newValue = false;
+            }
+
+            // TODO: should this be controllable at all ?
+            if (memory->enable) {
+            }
+
+            // Enable if true, low is enabled
+            gpio_put(EnablePin::value, newValue ? 0 : 1);
+
+            // TODO: Set Pin to value
             return true;
         }
+
         bool setEnable(...) { return true; }
+
+        bool stepsTransmitted() { return stepsToDo == 0 && !dma_channel_is_busy(DeviceResources::channel); }
 
         static inline constexpr uint8_t MaxBitmasks = 32;
         uint16_t stepsToDo = 0;
