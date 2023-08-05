@@ -92,6 +92,8 @@ namespace PicoDriver {
 #include "generated/drv8825.pio.h"
 
 #include "hardware/dma.h"
+#include "hardware/pio.h"
+#include "hardware/gpio.h"
 
 // TODO: add PIO device resource or program
 namespace PicoDriver {

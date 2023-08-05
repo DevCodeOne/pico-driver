@@ -1,6 +1,5 @@
 #pragma once
 
-#include <sys/wait.h>
 #include <type_traits>
 #include <cstdint>
 #include <concepts>
@@ -37,7 +36,7 @@ namespace PicoDriver {
 
 // Device-specific code and includes
 #if !defined(MINIMAL) || MINIMAL == 0
-#include "pico/stdlib.h"
+
 #include "hardware/pwm.h"
 
 namespace PicoDriver {
