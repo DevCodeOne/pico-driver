@@ -13,6 +13,7 @@
 #include "devices/adc.h"
 #include "devices/hx711.h"
 #include "devices/drv8825.h"
+#include "devices/output.h"
 #include "pico_resource.h"
 
 #include "runtime_access.h"
@@ -27,11 +28,13 @@ static auto constexpr I2CDevice0 = i2c0;
 using DosingPump = DRV8825<PicoResource<PIOResource<PIODevice::Zero, PIOStateMachine::Zero>, DMAResource<DMAChannel::Two>>,
                             Pin<10>, NoDirectionPin, Pin<11>, Hz<20u>>;
 using LEDPWM = PWM<Pin<25>, Hz<100u>>;
+using GenOutput = Output<Pin<12>>;
 using DeviceStructure = DeviceList<
                                 DosingPump,
                                 LEDPWM,
                                 ADC<Pin<26>>,
-                                ADC<NoInputPin, Channel<ADCChannel::Four>>
+                                ADC<NoInputPin, Channel<ADCChannel::Four>>,
+                                GenOutput
                             >;
 using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<4>>, SCL<Pin<5>>, Address<0x17>, Baudrate<400'000>, 
                             DeviceStructure

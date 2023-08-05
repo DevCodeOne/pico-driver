@@ -202,8 +202,8 @@ namespace PicoDriver {
 
         template<typename T, typename = decltype((void) T::direction)>
         bool initDirection(volatile T *memory) {
-            gpio_init(DirPin::Value);
-            gpio_set_dir(DirPin::Value, GPIO_OUT);
+            gpio_init(DirPin::value);
+            gpio_set_dir(DirPin::value, GPIO_OUT);
             return true;
         }
 
