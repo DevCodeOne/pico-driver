@@ -14,7 +14,7 @@ namespace PicoDriver {
     class Output;
 
     struct OutputType {
-        static inline constexpr uint8_t Id = 0x1;
+        static inline constexpr uint8_t Id = 0x7;
         static inline constexpr char Name[] = "OUT";
     };
 
