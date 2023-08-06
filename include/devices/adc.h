@@ -64,7 +64,6 @@ namespace PicoDriver {
 #include <mutex>
 
 #include "hardware/adc.h"
-#include <cstdio>
 
 namespace PicoDriver {
 
@@ -84,17 +83,16 @@ namespace PicoDriver {
             });
 
             initGPIO(memory);
-            adc_select_input(static_cast<uint>(Channel::value));
-
             return true;
         }
 
         bool doWork(volatile MemoryRepresentation<ADCType> *memory) {
             // constexpr float conversionFactor = 3.3f / (1 << 12);
+            adc_select_input(static_cast<uint>(Channel::value));
             uint16_t result = adc_read();
             memory->adcRawValue = result;
             // float adc = result * conversionFactor;
-            // printf("Raw value: 0x%03x, voltage: %f, temp : %f V\n", result, adc,
+            // printf("Raw value: %u, voltage: %f, temp : %f V\n", result, adc,
             //     27.0f - (adc - 0.706f) / 0.001721f);
             return true;
         }
