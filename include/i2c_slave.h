@@ -21,6 +21,7 @@
 namespace PicoDriver {
 
     // TODO: check max memory size of 255 when using 1-byte addresses
+    // TODO: check if combination of type and index is unique -> two types cannot share the same id
     template<auto *I2CDevice, typename SDAPin, typename SCLPin, typename I2CAddress, typename Baudrate, typename DeviceListTypeWithoutInfo>
     class I2CSlave {
         private:

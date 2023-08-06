@@ -33,7 +33,7 @@ using DeviceStructure = DeviceList<
                                 DosingPump,
                                 LEDPWM,
                                 ADC<Pin<26>>,
-                                ADC<NoInputPin, Channel<ADCChannel::Four>>,
+                                InternalTemperatureADC,
                                 GenOutput
                             >;
 using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<4>>, SCL<Pin<5>>, Address<0x17>, Baudrate<400'000>, 

@@ -30,6 +30,8 @@ namespace PicoDriver {
     requires (IsPinAcceptable<Pin>::value)
     class ADC;
 
+    using InternalTemperatureADC = ADC<NoInputPin, Channel<ADCChannel::Four>>;
+
     struct ADCType {
         static inline constexpr uint8_t Id = 0x2;
         static inline constexpr char Name[] = "ADC";
@@ -90,7 +92,7 @@ namespace PicoDriver {
         bool doWork(volatile MemoryRepresentation<ADCType> *memory) {
             // constexpr float conversionFactor = 3.3f / (1 << 12);
             uint16_t result = adc_read();
-            memory->adcValue = result;
+            memory->adcRawValue = result;
             // float adc = result * conversionFactor;
             // printf("Raw value: 0x%03x, voltage: %f, temp : %f V\n", result, adc,
             //     27.0f - (adc - 0.706f) / 0.001721f);
