@@ -41,13 +41,17 @@ namespace PicoDriver {
         using TagType = ADCType;
     };
 
+    // TODO: Maybe add special adc value with max value and conversion already built-in
     template<>
     struct MemoryRepresentation<ADCType> {
         ~MemoryRepresentation() = delete;
 
-        uint16_t adcValue;
+        uint16_t adcRawValue;
 
         static inline constexpr auto VREF = 3.3f;
+        static inline constexpr uint16_t MaxADCValue = 1 << 12;
+        static inline constexpr float ConversionFactor = VREF / static_cast<float>(MaxADCValue);
+
     } __attribute__((packed));
 
 }
