@@ -21,22 +21,23 @@
 using namespace PicoDriver;
 
 // TODO: add concepts for all the different device types
-static auto constexpr I2CDevice0 = i2c0;
+static auto constexpr I2CDevice0 = i2c1;
 
 // TODO: do resource check
 // TODO: add pins to resources somehow (values can't be named the same), or use a tuple in the future
 using DosingPump = DRV8825<PicoResource<PIOResource<PIODevice::Zero, PIOStateMachine::Zero>, DMAResource<DMAChannel::Two>>,
-                            Pin<10>, NoDirectionPin, Pin<11>, Hz<20u>>;
+                            // Pin<20>, NoDirectionPin, Pin<21>, Hz<200u>>;
+                            Pin<20>, NoDirectionPin, Pin<21>, Hz<100u>>;
 using LEDPWM = PWM<Pin<25>, Hz<100u>>;
 using GenOutput = Output<Pin<12>>;
 using DeviceStructure = DeviceList<
                                 DosingPump,
-                                LEDPWM,
                                 ADC<Pin<26>>,
                                 InternalTemperatureADC,
-                                GenOutput
+                                GenOutput,
+                                LEDPWM
                             >;
-using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<4>>, SCL<Pin<5>>, Address<0x17>, Baudrate<400'000>, 
+using i2cDevice = I2CSlave<I2CDevice0, SDA<Pin<2>>, SCL<Pin<3>>, Address<0x17>, Baudrate<400'000>, 
                             DeviceStructure
                         >;
 int main() {

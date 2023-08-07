@@ -82,27 +82,20 @@ namespace PicoDriver {
                 adc_init();
             });
 
-            initGPIO(memory);
+            initGPIO(Pin{});
             return true;
         }
 
         bool doWork(volatile MemoryRepresentation<ADCType> *memory) {
-            // constexpr float conversionFactor = 3.3f / (1 << 12);
             adc_select_input(static_cast<uint>(Channel::value));
-            uint16_t result = adc_read();
-            memory->adcRawValue = result;
-            // float adc = result * conversionFactor;
-            // printf("Raw value: %u, voltage: %f, temp : %f V\n", result, adc,
-            //     27.0f - (adc - 0.706f) / 0.001721f);
+            memory->adcRawValue = adc_read();
             return true;
         }
 
         private:
-        template<typename T, typename = decltype((void) T::value)>
-        bool initGPIO(volatile T *memory) {
-            adc_gpio_init(T::value);
-            // TODO: is this correct ?
-
+        template<typename PinType, typename = decltype((void) PinType::value)>
+        bool initGPIO(const PinType &pin) {
+            adc_gpio_init(PinType::value);
             return true;
         }
 

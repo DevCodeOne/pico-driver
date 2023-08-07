@@ -10,10 +10,7 @@
 ; When the frequency is increased the input would have to be longer, for slower steps
 
 .wrap_target
-    set X, (10 - 1)
-    out pins, 1 [9] ; 10-Cycles -> 2000 Hz -> 200 Hz
-rinse:
-    jmp X--, rinse
+    out pins, 1 [9] ; 10-Cycles -> 4000 Hz -> 400 Hz
 .wrap
 
 % c-sdk {

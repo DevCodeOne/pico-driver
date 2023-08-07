@@ -46,7 +46,6 @@ namespace PicoDriver {
             static inline auto &memAddress  = Values::memAddress;
             static inline auto &data  = Values::data;
             static inline auto &runtimeDevices  = Values::runtimeDevices;
-            static inline volatile size_t mNumEvents = 0;
 
             using LoopDevices = typename Values::LoopDevices;
 
@@ -69,10 +68,6 @@ namespace PicoDriver {
                 }
             }
 
-            static auto numEvents() {
-                return mNumEvents;
-            }
-
             static bool install() { 
                 // Init all device memory, so the device is ready, by the time i2c is started
                 LoopDevices::call([](auto index, auto &instance) {
@@ -83,12 +78,12 @@ namespace PicoDriver {
 
                 gpio_init(SDAPin::value);
                 gpio_set_function(SDAPin::value, GPIO_FUNC_I2C);
-                gpio_pull_up(SDAPin::value);
+                // gpio_pull_up(SDAPin::value);
 
 
                 gpio_init(SCLPin::value);
                 gpio_set_function(SCLPin::value, GPIO_FUNC_I2C);
-                gpio_pull_up(SCLPin::value);
+                // gpio_pull_up(SCLPin::value);
 
                 i2c_init(I2CDevice, Baudrate::value);
 
@@ -106,7 +101,6 @@ namespace PicoDriver {
         private:
 
             static void handler(i2c_inst_t *i2c, i2c_slave_event_t event) {
-                mNumEvents = mNumEvents + 1;
                 switch (event) {
                     case I2C_SLAVE_RECEIVE:
                     if (!memAddress) {

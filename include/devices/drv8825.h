@@ -98,6 +98,7 @@ namespace PicoDriver {
 // TODO: add PIO device resource or program
 namespace PicoDriver {
 
+
     struct DRV8825Program {
         static uint offset;
         static std::once_flag initProgram;
@@ -109,6 +110,9 @@ namespace PicoDriver {
         public:
 
         using Tag = StepperMotorTag<DirPin, EnablePin>;
+        // TODO: configure these differently
+        static inline constexpr auto TargetFrequency = 4000u;
+        static inline constexpr auto PIFrequency = 125'000'000ull;
 
         bool install(volatile MemoryRepresentation<Tag> *memory) { 
             std::call_once(DRV8825Program::initProgram, []() {
@@ -116,10 +120,10 @@ namespace PicoDriver {
             });
             // TODO: Set clkdiv to multiple of Freq
             drv8825_program_init(DeviceResources::Device, DeviceResources::StateMachine, 
-                DRV8825Program::offset, StepPin::value, static_cast<uint16_t>(125'000'000ull / 2000));
-                        return true; 
+                DRV8825Program::offset, StepPin::value, static_cast<uint16_t>(PIFrequency / TargetFrequency));
             initDirection(memory);
             initEnable(memory);
+            return true; 
         }
 
         bool doWork(volatile MemoryRepresentation<Tag> *memory) { 
@@ -130,14 +134,8 @@ namespace PicoDriver {
 
             // TODO: this should be an interrupt, or maybe not
             if (stepsToDo == 0 || dma_channel_is_busy(DeviceResources::channel)) {
-                if (stepsToDo == 0 && !dma_channel_is_busy(DeviceResources::channel)) {
-                    // If above is true, work is done, disable stepper if setting is set
-                    setEnable(memory);
-                }
                 return true;
-            } else {
-                setEnable(memory);
-            }
+            } 
             auto [stepsTaken, wordsToTransfer] = calculateMasks(stepsToDo);
             stepsToDo -= stepsTaken;
 
@@ -172,7 +170,7 @@ namespace PicoDriver {
             // Right now static frequency, but can be changed later
             static constexpr auto frequency = Freq::value;
             // TODO: make configureable and add as value later on
-            static constexpr auto frequencyPIO = 200;
+            static constexpr auto frequencyPIO = 400;
             static constexpr auto oneEveryXCycle = frequencyPIO / frequency;
             unsigned int cycleCount = 0;
             unsigned int stepsCount = 0;
@@ -231,7 +229,7 @@ namespace PicoDriver {
             gpio_init(EnablePin::value);
             gpio_set_dir(EnablePin::value, GPIO_OUT);
             // Disable driver
-            gpio_put(EnablePin::value, 1);
+            gpio_put(EnablePin::value, true);
             return true;
         }
 
@@ -246,12 +244,8 @@ namespace PicoDriver {
                 newValue = false;
             }
 
-            // TODO: should this be controllable at all ?
-            if (memory->enable) {
-            }
-
-            // Enable if true, low is enabled
-            gpio_put(EnablePin::value, newValue ? 0 : 1);
+            // Enable if true, low level is enabled
+            gpio_put(EnablePin::value, !newValue);
 
             // TODO: Set Pin to value
             return true;
